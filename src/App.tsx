@@ -66,11 +66,11 @@ export default function App() {
       {isRushMode && (
         <div className="fixed top-20 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
           🔥 RUSH MODE: {ordersInProgress} commandes
+        </div>
+      )}
       
       {/* Device Simulation */}
-      <div className={`flex items-center justify-center p-4 ${isUrlMode ? 'min-h-screen' : 'min-h-[calc(100vh-80px)]'}`}
-      {/* Device Simulation */}
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+      <div className={`flex items-center justify-center p-4 ${isUrlMode ? 'min-h-screen' : 'min-h-[calc(100vh-80px)]'}`}>
         <div 
           className={`bg-white shadow-2xl transition-all duration-500 ${
             deviceType === 'tablet' 
