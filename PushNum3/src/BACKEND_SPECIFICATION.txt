@@ -1,0 +1,374 @@
+================================================================================
+SPÉCIFICATION BACKEND - APPLICATION DE COMMANDE RESTAURANT
+================================================================================
+
+Ce document décrit TOUTES les données nécessaires pour faire fonctionner
+l'application de commande de restaurant avec ses différents modes.
+
+IMPORTANT: Dans l'implémentation actuelle, les données sont dans un fichier
+TypeScript (/data/restaurant-data.ts) pour faciliter le développement.
+Pour un backend réel, ces données doivent être servies via des endpoints API
+au format JSON comme décrit ci-dessous.
+
+================================================================================
+1. DONNÉES DES PLATS (DISHES)
+================================================================================
+
+FORMAT: JSON
+ENDPOINT SUGGÉRÉ: GET /api/dishes
+FICHIER LOCAL: /data/restaurant-data.ts -> restaurantData.dishes
+
+STRUCTURE:
+{
+  "id": string,                    // Identifiant unique (ex: "e1", "p1", "d1")
+  "name": string,                  // Nom du plat
+  "description": string,           // Description courte du plat
+  "category": string,              // "entrée" | "plat" | "dessert"
+  "subcategory": string,           // Sous-catégorie (ex: "Salades", "Viandes", "Glaces")
+  "price": number,                 // Prix en euros (ex: 9.50)
+  "prepTime": number,              // Temps de préparation en minutes
+  "popularity": number,            // Score de popularité (1-5)
+  "isSpecialOfDay": boolean,       // Est-ce le plat du jour ?
+  "isQuick": boolean,              // Plat rapide (< 15 min) ?
+  "imageUrl": string,              // URL de l'image du plat
+  "kidFriendly": boolean,          // Adapté aux enfants ?
+  "hasVegetables": boolean,        // Contient des légumes ?
+  "ingredients": string[],         // Liste d'ingrédients pour recherche
+  "isVegetarian": boolean,         // Option végétarienne ?
+  "isVegan": boolean,              // Option végane ?
+  "isGlutenFree": boolean,         // Sans gluten ?
+  "spicyLevel": number,            // Niveau de piment (0-3)
+  "isLight": boolean,              // Option légère/santé ?
+  "isLocal": boolean,              // Produits locaux ?
+  "cuisine": string                // "française" | "italienne" | "asiatique" | "méditerranéenne"
+}
+
+NOTES IMPORTANTES:
+- Tous les plats doivent avoir une image (URL Unsplash ou serveur)
+- Les ingredients sont utilisés pour la recherche textuelle
+- kidFriendly détermine quels plats apparaissent en mode enfant
+- isQuick est utilisé en mode Rush pour filtrer les plats rapides
+- category doit être exactement "entrée", "plat" ou "dessert"
+
+NOMBRE MINIMUM RECOMMANDÉ:
+- Au moins 3-5 entrées
+- Au moins 6-8 plats principaux
+- Au moins 3-4 desserts
+- Dont au moins 3 entrées kidFriendly, 5 plats kidFriendly, 3 desserts kidFriendly
+
+================================================================================
+2. DONNÉES DES RÉCOMPENSES ENFANT (CHILD REWARDS)
+================================================================================
+
+FORMAT: JSON
+ENDPOINT SUGGÉRÉ: GET /api/child-rewards
+FICHIER LOCAL: /data/restaurant-data.ts -> restaurantData.childRewards
+
+STRUCTURE:
+{
+  "id": string,            // Identifiant unique (ex: "lollipop", "icecream")
+  "name": string,          // Nom de la récompense
+  "emoji": string,         // Emoji représentant la récompense
+  "stars": number,         // Coût en étoiles (3 ou 6)
+  "description": string,   // Description de la récompense
+  "imageUrl": string       // URL de l'image (optionnel, peut utiliser emoji)
+}
+
+NOTES IMPORTANTES:
+- Les récompenses à 3 étoiles sont des petites friandises (bonbons, sucettes)
+- Les récompenses à 6 étoiles sont des desserts (glace, crêpe)
+- Ces items sont ajoutés gratuitement au panier (price: 0)
+- L'ID sera préfixé par "reward-" dans le système
+
+NOMBRE MINIMUM RECOMMANDÉ:
+- Au moins 3 récompenses à 3 étoiles
+- Au moins 2 récompenses à 6 étoiles
+
+SYSTÈME D'ÉTOILES:
+- Entrée sélectionnée = +2 étoiles
+- Plat principal sélectionné = +4 étoiles
+- Dessert sélectionné = +2 étoiles
+- Maximum possible = 8 étoiles (si menu complet)
+
+================================================================================
+3. MESSAGES DE CHEF LÉO (CHILD MODE MESSAGES)
+================================================================================
+
+FORMAT: JSON
+ENDPOINT SUGGÉRÉ: GET /api/child-mode-config
+FICHIER LOCAL: /data/restaurant-data.ts -> restaurantData.childModeConfig.chefLeoMessages
+
+STRUCTURE:
+{
+  "welcome": string,      // Message d'accueil initial
+  "entrée": string,       // Message lors de la sélection d'entrée
+  "plat": string,         // Message lors de la sélection du plat
+  "dessert": string,      // Message lors de la sélection du dessert
+  "complete": string,     // Message de félicitation finale
+  "cart": string,         // Message dans l'écran du panier
+  "rewards": string       // Message dans l'écran des récompenses
+}
+
+NOTES IMPORTANTES:
+- Les messages doivent être enthousiastes et encourageants
+- Utiliser des emojis pour rendre les messages ludiques
+- Mentionner le nombre d'étoiles gagnées (+2⭐, +4⭐)
+
+================================================================================
+4. ENCOURAGEMENTS (CHILD MODE)
+================================================================================
+
+FORMAT: JSON
+ENDPOINT SUGGÉRÉ: GET /api/child-mode-config
+FICHIER LOCAL: /data/restaurant-data.ts -> restaurantData.childModeConfig.encouragements
+
+STRUCTURE:
+["Message 1", "Message 2", "Message 3", ...]
+
+NOTES IMPORTANTES:
+- Messages courts et positifs
+- Affichés aléatoirement lors de la sélection d'un plat
+- Au moins 5-6 messages différents pour la variété
+
+================================================================================
+5. CONFIGURATION DU RESTAURANT
+================================================================================
+
+FORMAT: JSON
+ENDPOINT SUGGÉRÉ: GET /api/restaurant-config
+FICHIER LOCAL: /data/restaurant-data.ts -> restaurantData.restaurantConfig
+
+STRUCTURE:
+{
+  "name": string,                    // Nom du restaurant
+  "logo": string,                    // URL du logo
+  "welcomeMessage": string,          // Message d'accueil
+  "rushHourConfig": {
+    "enabled": boolean,              // Mode Rush activé ?
+    "hours": [                       // Heures de pointe
+      {"start": number, "end": number},  // Ex: {start: 12, end: 14}
+      {"start": number, "end": number}   // Ex: {start: 19, end: 21}
+    ],
+    "bannerMessage": string,         // Message de la bannière Rush
+    "warningThreshold": number       // Seuil d'alerte temps d'attente (minutes)
+  },
+  "features": {
+    "childMode": boolean,            // Mode enfant disponible ?
+    "adaptiveSuggestions": boolean,  // Suggestions adaptatives ?
+    "ingredientSearch": boolean,     // Recherche d'ingrédients ?
+    "multipleDevices": boolean       // Support tablette + smartphone ?
+  }
+}
+
+NOTES IMPORTANTES:
+- rushHourConfig.hours utilise le format 24h (ex: 19 = 19h00)
+- Les features permettent d'activer/désactiver des fonctionnalités
+
+================================================================================
+6. CATÉGORIES ET SOUS-CATÉGORIES
+================================================================================
+
+FORMAT: JSON (dérivé automatiquement des plats)
+ENDPOINT SUGGÉRÉ: GET /api/categories
+FICHIER LOCAL: Calculé dynamiquement depuis "dishes"
+
+STRUCTURE AUTOMATIQUE:
+{
+  "entrée": ["Salades", "Soupes", "Tartines", ...],
+  "plat": ["Viandes", "Poissons", "Pizzas", "Pâtes", ...],
+  "dessert": ["Crèmes", "Tartes", "Glaces", ...]
+}
+
+NOTES IMPORTANTES:
+- Les sous-catégories sont extraites automatiquement du champ "subcategory"
+- Chaque catégorie principale doit avoir au moins 2 sous-catégories
+- Permet le filtrage hiérarchique dans l'interface
+
+================================================================================
+7. FILTRES ET TAGS
+================================================================================
+
+FORMAT: Dérivé des plats
+FILTRES DISPONIBLES:
+- Par régime: isVegetarian, isVegan, isGlutenFree
+- Par type: isQuick, isLight, isLocal, isSpecialOfDay
+- Par niveau piquant: spicyLevel (0-3)
+- Par cuisine: cuisine (française, italienne, etc.)
+- Par popularité: popularity (1-5)
+
+RECHERCHE PAR INGRÉDIENTS:
+- Utilise le champ "ingredients" de chaque plat
+- Support inclusion (avec) et exclusion (sans)
+- Recherche case-insensitive
+
+================================================================================
+8. FORMAT DU FICHIER DE DONNÉES COMPLET
+================================================================================
+
+FICHIER: /data/restaurant-data.ts
+
+```typescript
+export const restaurantData = {
+  restaurantConfig: {
+    // Configuration générale (voir section 5)
+  },
+  dishes: [
+    // Liste de tous les plats (voir section 1)
+  ],
+  childRewards: [
+    // Liste des récompenses (voir section 2)
+  ],
+  childModeConfig: {
+    chefLeoMessages: {
+      // Messages de Chef Léo (voir section 3)
+    },
+    encouragements: [
+      // Liste d'encouragements (voir section 4)
+    ]
+  }
+};
+```
+
+================================================================================
+9. DONNÉES DE COMMANDE (OUTPUT)
+================================================================================
+
+FORMAT: JSON
+ENDPOINT SUGGÉRÉ: POST /api/orders
+STRUCTURE À ENVOYER:
+
+{
+  "orderId": string,              // ID unique de commande
+  "timestamp": string,            // ISO 8601 datetime
+  "tableNumber": number,          // ⭐ NOUVEAU: Numéro de table (1-999)
+  "deviceType": string,           // "tablet" | "smartphone"
+  "userMode": string,             // "normal" | "child"
+  "items": [
+    {
+      "dishId": string,           // ID du plat
+      "quantity": number,         // Quantité commandée
+      "price": number,            // Prix unitaire
+      "isReward": boolean         // Est-ce une récompense gratuite ?
+    }
+  ],
+  "totalPrice": number,           // Prix total
+  "totalItems": number,           // Nombre total d'articles
+  "estimatedPrepTime": number,    // ⭐ NOUVEAU: Temps de préparation estimé (minutes)
+  "childModeData": {              // Seulement si userMode = "child"
+    "starsEarned": number,        // Étoiles gagnées
+    "rewardsSelected": string[]   // IDs des récompenses choisies
+  }
+}
+
+NOTES IMPORTANTES SUR LE NUMÉRO DE TABLE:
+- En mode tablette: Le serveur saisit le numéro de table sur un écran dédié avant de sélectionner le mode
+- En mode smartphone: Le numéro de table est codé en dur à 1 (temporaire, à modifier plus tard selon les besoins)
+- Le numéro de table permet d'associer la commande à la table du client dans le système de gestion du restaurant
+- Plage valide: 1-999
+
+================================================================================
+10. COMPATIBILITÉ ET MIGRATION
+================================================================================
+
+RÉTROCOMPATIBILITÉ:
+- Si le backend ne fournit pas childRewards, utiliser valeurs par défaut
+- Si rushHourConfig manquant, désactiver le mode Rush
+- Gérer gracieusement les images manquantes (fallback)
+
+VALIDATION:
+- Vérifier que tous les plats ont un prix > 0 (sauf récompenses)
+- Vérifier que les catégories sont valides
+- Vérifier que kidFriendly a au moins 8-10 plats
+
+PERFORMANCE:
+- Mettre en cache les données des plats côté client
+- Rafraîchir uniquement en cas de changement
+- Lazy loading des images
+
+================================================================================
+11. EXEMPLES D'APPELS API
+================================================================================
+
+// Récupérer tous les plats
+GET /api/dishes
+Response: { "dishes": [...] }
+
+// Récupérer la configuration
+GET /api/restaurant-config
+Response: { "restaurantConfig": {...} }
+
+// Récupérer les récompenses enfant
+GET /api/child-rewards
+Response: { "childRewards": [...] }
+
+// ⭐ NOUVEAU: Vérifier le statut du mode Rush
+GET /api/rush-status
+Response: { 
+  "ordersInProgress": number,  // Nombre de commandes en préparation
+  "timestamp": string          // ISO 8601 datetime
+}
+Notes:
+- Appelé automatiquement toutes les 10 secondes par l'application
+- Si ordersInProgress > 10, le mode Rush s'active automatiquement
+- L'application ajuste l'interface en temps réel
+
+// Soumettre une commande
+POST /api/orders
+Body: { "orderId": "...", "items": [...], ... }
+Response: { "success": true, "orderId": "...", "estimatedTime": 20 }
+
+================================================================================
+12. SYSTÈME DE MODE RUSH DYNAMIQUE
+================================================================================
+
+Le mode Rush ne se base plus sur les heures fixes, mais sur le nombre réel
+de commandes en cours de préparation.
+
+FONCTIONNEMENT:
+1. L'application interroge GET /api/rush-status toutes les 10 secondes
+2. Le backend renvoie le nombre de commandes en préparation
+3. Si ce nombre > 10 (seuil configurable), le mode Rush s'active
+4. L'interface s'adapte automatiquement en temps réel
+
+ENDPOINT: GET /api/rush-status
+
+REQUEST:
+- Aucun paramètre requis
+- Headers: Content-Type: application/json
+
+RESPONSE FORMAT:
+{
+  "ordersInProgress": number,     // Nombre actuel de commandes en préparation
+  "timestamp": string             // Timestamp ISO 8601 de la réponse
+}
+
+EXEMPLE DE RESPONSE:
+{
+  "ordersInProgress": 15,
+  "timestamp": "2025-12-06T14:23:45.123Z"
+}
+
+LOGIQUE BACKEND SUGGÉRÉE:
+- Compter les commandes avec status = "in_progress" ou "preparing"
+- Exclure les commandes "completed", "cancelled", "pending"
+- Mettre en cache le résultat pendant 5-10 secondes pour optimiser
+
+CONFIGURATION:
+- Seuil par défaut: 10 commandes
+- Modifiable via /data/rushService.ts -> RUSH_THRESHOLD
+- Intervalle de vérification: 10 secondes (RUSH_CHECK_INTERVAL)
+
+FICHIER DE SIMULATION:
+- /data/rushService.ts
+- Fonction simulateGetOrdersInProgress() retourne actuellement 15
+- À remplacer par un vrai fetch() vers l'API
+
+AVANTAGES:
+- Détection en temps réel de la charge du restaurant
+- Activation/désactivation automatique du mode Rush
+- Meilleure expérience utilisateur adaptée à la situation réelle
+- Pas de dépendance aux heures fixes
+
+================================================================================
+FIN DE LA SPÉCIFICATION
+================================================================================
