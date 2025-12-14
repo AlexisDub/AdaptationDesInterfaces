@@ -101,7 +101,7 @@ export const restaurantData = {
       "popularity": 4,
       "isSpecialOfDay": false,
       "isQuick": true,
-      "imageUrl": "https://images.unsplash.com/photo-1544025162-d76694265947?w=800",
+      "imageUrl": "https://img.cuisineaz.com/660x495/2013/12/20/i94517-carpaccio-de-boeuf.webp?w=800",
       "kidFriendly": false,
       "hasVegetables": true,
       "ingredients": ["bœuf", "roquette", "parmesan", "truffe"],
