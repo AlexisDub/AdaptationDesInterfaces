@@ -240,8 +240,8 @@ export function MenuView({
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm text-neutral-900 line-clamp-1 flex-1">{dish.name}</h3>
-                    <span className="text-sm text-orange-600 flex-shrink-0">{dish.price.toFixed(2)}€</span>
+                    <h3 className="text-base text-neutral-900 line-clamp-1 flex-1">{dish.name}</h3>
+                    <span className="text-base text-orange-600 flex-shrink-0">{dish.price.toFixed(2)}€</span>
                   </div>
                 </div>
                 {quantity > 0 ? (
@@ -255,7 +255,7 @@ export function MenuView({
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="text-sm text-neutral-700 min-w-[1.5rem] text-center">{quantity}</span>
+                    <span className="text-base text-neutral-700 min-w-[1.5rem] text-center">{quantity}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
