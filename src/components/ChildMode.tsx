@@ -292,7 +292,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
             transition={{ delay: 0.2 }}
           >
             🎉 Tu as terminé ta commande !<br />
-            <strong className="text-purple-600">Passe maintenant la tablette à un adulte</strong> pour qu'il puisse continuer la commande.
+            <strong className="text-purple-600">Passe maintenant ton appareil à un adulte</strong> pour qu'il puisse continuer la commande.
           </motion.p>
 
           <motion.div

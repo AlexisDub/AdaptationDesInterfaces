@@ -216,7 +216,7 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
                           className="bg-white text-orange-600 hover:bg-orange-50 border-none shadow-md text-xs px-2 py-1 h-auto flex-shrink-0"
                           onClick={handleActivateRushMode}
                         >
-                          Mode Rush
+                          Je veux manger rapidement
                         </Button>
                       </div>
                     ) : (
