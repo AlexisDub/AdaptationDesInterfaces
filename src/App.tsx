@@ -72,7 +72,7 @@ export default function App() {
       {/* Device Display */}
       {deviceType === 'smartphone' ? (
         // Mode téléphone : Plein écran
-        <div className="h-screen flex flex-col bg-white overflow-hidden">
+        <div className="h-screen bg-white">
           {/* Show table selection first for tablet, skip for smartphone */}
           {deviceType === 'tablet' && tableNumber === null ? (
             <TableSelectionScreen onSelectTable={handleTableSelection} />
