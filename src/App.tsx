@@ -88,15 +88,10 @@ export default function App() {
         </div>
       )}
       
-      {/* Device Simulation */}
-      <div className="flex items-center justify-center min-h-screen p-4">
-        <div 
-          className={`bg-white shadow-2xl transition-all duration-500 ${
-            deviceType === 'tablet' 
-              ? 'w-full max-w-6xl aspect-[4/3] rounded-2xl' 
-              : 'w-full max-w-md aspect-[9/16] rounded-3xl'
-          }`}
-        >
+      {/* Device Display */}
+      {deviceType === 'smartphone' ? (
+        // Mode téléphone : Plein écran
+        <div className="min-h-screen bg-white">
           {/* Show table selection first for tablet, skip for smartphone */}
           {deviceType === 'tablet' && tableNumber === null ? (
             <TableSelectionScreen onSelectTable={handleTableSelection} />
@@ -115,7 +110,30 @@ export default function App() {
             />
           )}
         </div>
-      </div>
+      ) : (
+        // Mode tablette : Simulation centrée
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <div className="bg-white shadow-2xl transition-all duration-500 w-full max-w-6xl aspect-[4/3] rounded-2xl">
+            {/* Show table selection first for tablet, skip for smartphone */}
+            {deviceType === 'tablet' && tableNumber === null ? (
+              <TableSelectionScreen onSelectTable={handleTableSelection} />
+            ) : !userMode ? (
+              <ModeSelectionScreen 
+                onSelectMode={setUserMode}
+                deviceType={deviceType}
+              />
+            ) : (
+              <MenuInterface 
+                deviceType={deviceType} 
+                isRushHour={isRushMode}
+                userMode={userMode}
+                tableNumber={tableNumber!}
+                onResetMode={handleResetMode}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
