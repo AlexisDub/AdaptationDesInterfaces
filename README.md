@@ -16,5 +16,4 @@ Les clients scannent un QR code contenant : `https://adaptation-des-interfaces-j
 - Arrive directement sur l'écran de sélection du mode (Parent/Enfant)
 - Le numéro de table est automatiquement détecté
 
-Voir [URL_GUIDE.md](URL_GUIDE.md) pour plus de détails.
   
