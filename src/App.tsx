@@ -8,7 +8,18 @@ import { getRushStatus, RUSH_CHECK_INTERVAL } from './data/rushService';
 export type UserMode = 'normal' | 'child' | null;
 
 export default function App() {
-  const [deviceType, setDeviceType] = useState<'tablet' | 'smartphone'>('tablet');
+  // Détection du mode depuis l'URL
+  const getInitialDeviceType = (): 'tablet' | 'smartphone' => {
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode');
+    return mode === 'phone' ? 'smartphone' : 'tablet';
+  };
+
+  const [deviceType, setDeviceType] = useState<'tablet' | 'smartphone'>(getInitialDeviceType());
+  const [isUrlMode, setIsUrlMode] = useState<boolean>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has('mode');
+  });
   const [userMode, setUserMode] = useState<UserMode>(null);
   const [isRushMode, setIsRushMode] = useState(false);
   const [ordersInProgress, setOrdersInProgress] = useState(0);
@@ -46,16 +57,18 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-neutral-100">
-      {/* Device Selector */}
-      <DeviceSelector deviceType={deviceType} setDeviceType={setDeviceType} />
+      {/* Device Selector - Affiché uniquement si pas de mode URL */}
+      {!isUrlMode && (
+        <DeviceSelector deviceType={deviceType} setDeviceType={setDeviceType} />
+      )}
       
       {/* Debug indicator - À retirer en production */}
       {isRushMode && (
         <div className="fixed top-20 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
           🔥 RUSH MODE: {ordersInProgress} commandes
-        </div>
-      )}
       
+      {/* Device Simulation */}
+      <div className={`flex items-center justify-center p-4 ${isUrlMode ? 'min-h-screen' : 'min-h-[calc(100vh-80px)]'}`}
       {/* Device Simulation */}
       <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
         <div 
