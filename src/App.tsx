@@ -71,6 +71,11 @@ export default function App() {
     <div className="min-h-screen bg-neutral-100">
       {/* Debug indicator - À retirer en production */}
       {isRushMode && (
+        <div className="fixed top-20 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
+          🔥 RUSH MODE: {ordersInProgress} commandes
+        </div>
+      )}
+      
       {/* Device Simulation */}
       {isUrlMode && deviceType === 'smartphone' ? (
         // Mode smartphone plein écran via URL
