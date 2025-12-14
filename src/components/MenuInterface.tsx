@@ -132,8 +132,12 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
   return (
     <div className="h-full flex flex-col bg-gradient-to-br from-orange-50 to-white overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-orange-200 bg-white/80 backdrop-blur-sm flex-shrink-0">
-        <div className="flex items-center justify-between mb-3">
+      <div className={`border-b border-orange-200 bg-white/80 backdrop-blur-sm flex-shrink-0 ${
+        deviceType === 'smartphone' ? 'p-2' : 'p-4'
+      }`}>
+        <div className={`flex items-center justify-between ${
+          deviceType === 'smartphone' ? 'mb-1' : 'mb-3'
+        }`}>
           <div className="flex items-center gap-3">
             <Button
               size="sm"
@@ -144,7 +148,9 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h2 className="text-orange-900">Restaurant Le Gourmet</h2>
+              <h2 className={`text-orange-900 ${
+                deviceType === 'smartphone' ? 'text-base' : ''
+              }`}>Restaurant Le Gourmet</h2>
             </div>
           </div>
           
