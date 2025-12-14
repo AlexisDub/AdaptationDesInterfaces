@@ -71,8 +71,8 @@ export default function App() {
     <div className="min-h-screen bg-neutral-100">
       {/* Device Display */}
       {deviceType === 'smartphone' ? (
-        // Mode téléphone : Plein écran avec overflow pour sticky elements
-        <div className="h-screen overflow-y-auto bg-white">
+        // Mode téléphone : Plein écran
+        <div className="h-screen flex flex-col bg-white overflow-hidden">
           {/* Show table selection first for tablet, skip for smartphone */}
           {deviceType === 'tablet' && tableNumber === null ? (
             <TableSelectionScreen onSelectTable={handleTableSelection} />
