@@ -69,25 +69,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-neutral-100">
-      {/* Debug indicator - À retirer en production */}
-      {isRushMode && (
-        <div className="fixed top-20 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
-          🔥 RUSH MODE: {ordersInProgress} commandes
-        </div>
-      )}
-      
-      {/* Debug: Temps cumulé - À retirer en production */}
-      <div className="fixed top-20 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
-        ⏱️ Temps cumulé: {currentPrepTime} min
-      </div>
-      
-      {/* Debug: Table number - À retirer en production */}
-      {tableNumber !== null && (
-        <div className="fixed top-32 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
-          🍽️ Table: {tableNumber}
-        </div>
-      )}
-      
       {/* Device Display */}
       {deviceType === 'smartphone' ? (
         // Mode téléphone : Plein écran
