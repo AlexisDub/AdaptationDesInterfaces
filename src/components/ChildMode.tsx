@@ -1273,18 +1273,18 @@ function DishFlipCard({ dish, index, isFlipped, onFlip, onSelect, stars, categor
 
         {/* Face arrière - Infos */}
         <div
-          className="absolute inset-0 backface-hidden rounded-2xl bg-gradient-to-br from-purple-200 to-pink-200 border-4 border-purple-400 p-4 flex flex-col justify-between"
+          className="absolute inset-0 backface-hidden rounded-2xl bg-gradient-to-br from-purple-200 to-pink-200 border-4 border-purple-400 p-3 flex flex-col"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
-          <div>
+          <div className="flex-1 min-h-0 flex flex-col">
             <div className="text-sm text-purple-900 mb-2 line-clamp-2">{dish.name}</div>
-            <div className="text-xs text-purple-700 mb-3 line-clamp-3">{dish.description}</div>
+            <div className="text-xs text-purple-700 mb-2 flex-1 overflow-hidden line-clamp-2">{dish.description}</div>
           </div>
-          <div>
+          <div className="flex-shrink-0">
             <div className="flex justify-between items-center mb-2">
               <div className="flex flex-col">
-                <span className="text-2xl text-orange-600">{childPrice.toFixed(2)}€</span>
-                <span className="text-xs text-green-600">-{discount}% portion enfant</span>
+                <span className="text-xl text-orange-600">{childPrice.toFixed(2)}€</span>
+                <span className="text-xs text-green-600">-{discount}%</span>
               </div>
               <span className="bg-yellow-400 text-yellow-900 text-xs px-2 py-1 rounded-full">
                 +{stars} ⭐
@@ -1292,7 +1292,7 @@ function DishFlipCard({ dish, index, isFlipped, onFlip, onSelect, stars, categor
             </div>
             <Button
               size="sm"
-              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg"
+              className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-lg text-xs py-2"
               onClick={(e) => {
                 e.stopPropagation();
                 onSelect();
