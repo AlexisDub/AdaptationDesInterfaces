@@ -65,14 +65,9 @@ export default function App() {
       )}
       
       {/* Device Simulation */}
-      <div className="flex items-center justify-center p-4 min-h-screen">
-        <div 
-          className={`bg-white shadow-2xl transition-all duration-500 ${
-            deviceType === 'tablet' 
-              ? 'w-full max-w-6xl aspect-[4/3] rounded-2xl' 
-              : 'w-full max-w-md aspect-[9/16] rounded-3xl'
-          }`}
-        >
+      {isUrlMode && deviceType === 'smartphone' ? (
+        // Mode smartphone plein écran via URL
+        <div className="w-full h-screen bg-white overflow-hidden">
           {!userMode ? (
             <ModeSelectionScreen 
               onSelectMode={setUserMode}
@@ -87,7 +82,32 @@ export default function App() {
             />
           )}
         </div>
-      </div>
+      ) : (
+        // Mode tablette avec simulation
+        <div className="flex items-center justify-center p-4 min-h-screen">
+          <div 
+            className={`bg-white shadow-2xl transition-all duration-500 ${
+              deviceType === 'tablet' 
+                ? 'w-full max-w-6xl aspect-[4/3] rounded-2xl' 
+                : 'w-full max-w-md aspect-[9/16] rounded-3xl'
+            }`}
+          >
+            {!userMode ? (
+              <ModeSelectionScreen 
+                onSelectMode={setUserMode}
+                deviceType={deviceType}
+              />
+            ) : (
+              <MenuInterface 
+                deviceType={deviceType} 
+                isRushHour={isRushMode}
+                userMode={userMode}
+                onResetMode={handleResetMode}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
