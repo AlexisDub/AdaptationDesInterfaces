@@ -112,7 +112,7 @@ STRUCTURE:
 NOTES IMPORTANTES:
 - Les messages doivent être enthousiastes et encourageants
 - Utiliser des emojis pour rendre les messages ludiques
-- Mentionner le nombre d'étoiles gagnées (+2⭐, +4⭐)
+- Mentionner le nombre d'étoiles gagnées (+2, +4)
 
 ================================================================================
 4. ENCOURAGEMENTS (CHILD MODE)
@@ -240,7 +240,7 @@ STRUCTURE À ENVOYER:
 {
   "orderId": string,              // ID unique de commande
   "timestamp": string,            // ISO 8601 datetime
-  "tableNumber": number,          // ⭐ NOUVEAU: Numéro de table (1-999)
+  "tableNumber": number,          // Numéro de table (1-999)
   "deviceType": string,           // "tablet" | "smartphone"
   "userMode": string,             // "normal" | "child"
   "items": [
@@ -253,7 +253,7 @@ STRUCTURE À ENVOYER:
   ],
   "totalPrice": number,           // Prix total
   "totalItems": number,           // Nombre total d'articles
-  "estimatedPrepTime": number,    // ⭐ NOUVEAU: Temps de préparation estimé (minutes)
+  "estimatedPrepTime": number,    // Temps de préparation estimé (minutes)
   "childModeData": {              // Seulement si userMode = "child"
     "starsEarned": number,        // Étoiles gagnées
     "rewardsSelected": string[]   // IDs des récompenses choisies
@@ -301,7 +301,7 @@ Response: { "restaurantConfig": {...} }
 GET /api/child-rewards
 Response: { "childRewards": [...] }
 
-// ⭐ NOUVEAU: Vérifier le statut du mode Rush
+// Vérifier le statut du mode Rush
 GET /api/rush-status
 Response: { 
   "ordersInProgress": number,  // Nombre de commandes en préparation
