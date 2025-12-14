@@ -3973,4 +3973,12 @@ html {
     overflow: auto;
     -webkit-overflow-scrolling: touch;
   }
+  
+  /* Ensure full-screen layout in landscape on tablets */
+  @media (orientation: landscape) {
+    html, body, #root {
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+  }
 }

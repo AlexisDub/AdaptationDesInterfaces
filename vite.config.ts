@@ -17,7 +17,7 @@
           theme_color: '#FF6B35',
           background_color: '#ffffff',
           display: 'standalone',
-          orientation: 'any',
+          orientation: 'landscape',
           scope: '/',
           start_url: '/',
           icons: [

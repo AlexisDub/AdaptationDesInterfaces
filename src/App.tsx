@@ -20,6 +20,15 @@ export default function App() {
   const [deviceType] = useState<'tablet' | 'smartphone'>(
     modeParam === 'phone' ? 'smartphone' : 'tablet'
   );
+  
+  // Lock orientation for tablet PWA in landscape
+  useEffect(() => {
+    if (isPWA && deviceType === 'tablet' && screen.orientation && (screen.orientation as any).lock) {
+      (screen.orientation as any).lock('landscape').catch((err: any) => {
+        console.log('Orientation lock not supported:', err);
+      });
+    }
+  }, [isPWA, deviceType]);
   const [userMode, setUserMode] = useState<UserMode>(null);
   const [tableNumber, setTableNumber] = useState<number | null>(
     deviceType === 'smartphone' && tableParam ? parseInt(tableParam) : null
