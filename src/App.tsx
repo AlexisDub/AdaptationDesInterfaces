@@ -1,17 +1,26 @@
 import { useState, useEffect } from 'react';
 import { MenuInterface } from './components/MenuInterface';
-import { DeviceSelector } from './components/DeviceSelector';
 import { ModeSelectionScreen } from './components/ModeSelectionScreen';
 import { TableSelectionScreen } from './components/TableSelectionScreen';
-import { Smartphone, Tablet } from 'lucide-react';
 import { getRushStatus, RUSH_CHECK_INTERVAL, getCurrentPrepTime } from './data/rushService';
 
 export type UserMode = 'normal' | 'child' | null;
 
 export default function App() {
-  const [deviceType, setDeviceType] = useState<'tablet' | 'smartphone'>('tablet');
+  // Lire les paramètres URL au démarrage
+  const urlParams = new URLSearchParams(window.location.search);
+  const modeParam = urlParams.get('mode');
+  const idTableParam = urlParams.get('idtable');
+  
+  // Mode par défaut : tablette (sauf si mode=phone dans l'URL)
+  const [deviceType, setDeviceType] = useState<'tablet' | 'smartphone'>(
+    modeParam === 'phone' ? 'smartphone' : 'tablet'
+  );
   const [userMode, setUserMode] = useState<UserMode>(null);
-  const [tableNumber, setTableNumber] = useState<number | null>(null);
+  // Numéro de table : null par défaut, ou la valeur de l'URL pour mode phone
+  const [tableNumber, setTableNumber] = useState<number | null>(
+    modeParam === 'phone' && idTableParam ? parseInt(idTableParam, 10) : null
+  );
   const [isRushMode, setIsRushMode] = useState(false);
   const [ordersInProgress, setOrdersInProgress] = useState(0);
   const [currentPrepTime, setCurrentPrepTime] = useState(0);
@@ -59,41 +68,31 @@ export default function App() {
     setUserMode(null);
   };
 
-  // Auto-set table number for smartphone
-  useEffect(() => {
-    if (deviceType === 'smartphone') {
-      setTableNumber(1); // Coder en dur le numéro de table 1 pour smartphone
-    } else {
-      setTableNumber(null); // Reset pour tablette
-    }
-  }, [deviceType]);
+  // Le numéro de table est maintenant géré via les paramètres URL
 
   return (
     <div className="min-h-screen bg-neutral-100">
-      {/* Device Selector */}
-      <DeviceSelector deviceType={deviceType} setDeviceType={setDeviceType} />
-      
       {/* Debug indicator - À retirer en production */}
       {isRushMode && (
-        <div className="fixed top-20 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
+        <div className="fixed top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
           🔥 RUSH MODE: {ordersInProgress} commandes
         </div>
       )}
       
       {/* Debug: Temps cumulé - À retirer en production */}
-      <div className="fixed top-20 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
+      <div className="fixed top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
         ⏱️ Temps cumulé: {currentPrepTime} min
       </div>
       
       {/* Debug: Table number - À retirer en production */}
       {tableNumber !== null && (
-        <div className="fixed top-32 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
+        <div className="fixed top-16 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
           🍽️ Table: {tableNumber}
         </div>
       )}
       
       {/* Device Simulation */}
-      <div className="flex items-center justify-center min-h-[calc(100vh-80px)] p-4">
+      <div className="flex items-center justify-center min-h-screen p-4">
         <div 
           className={`bg-white shadow-2xl transition-all duration-500 ${
             deviceType === 'tablet' 
