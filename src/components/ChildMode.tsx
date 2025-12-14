@@ -18,6 +18,7 @@ import {
 import { ChefHat, Star, Sparkles, Trophy, Crown, Gift, Zap, ShoppingCart, ArrowLeft, Home, X, Trash2 } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { motion, AnimatePresence } from 'motion/react';
+import { ViewModeToggle, type DisplayMode } from './ViewModeToggle';
 
 interface ChildModeProps {
   deviceType: 'tablet' | 'smartphone';
@@ -26,7 +27,7 @@ interface ChildModeProps {
   onBackToMenu?: () => void;
 }
 
-type MissionStep = 'welcome' | 'entrée' | 'plat' | 'dessert' | 'complete' | 'cart' | 'rewards';
+type MissionStep = 'welcome' | 'entrée' | 'plat' | 'dessert' | 'complete' | 'cart' | 'rewards' | 'handoff';
 
 interface PlateState {
   entrée: Dish | null;
@@ -81,6 +82,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
   const [selectedRewards, setSelectedRewards] = useState<typeof rewards>([]);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('grid');
 
   // Scroll vers le haut à chaque changement d'étape
   useEffect(() => {
@@ -222,11 +224,119 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
       onAddToCart(rewardDish);
     });
     
-    // Retour au menu principal si la fonction existe
-    if (onBackToMenu) {
-      onBackToMenu();
-    }
+    // Aller vers l'écran handoff au lieu de retourner directement
+    setMissionStep('handoff');
   };
+
+  // Écran de passation à l'adulte
+  if (missionStep === 'handoff') {
+    return (
+      <div ref={containerRef} className="h-full flex items-center justify-center p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 relative overflow-y-auto">
+        {/* Étoiles animées en arrière-plan */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute text-2xl"
+              initial={{ 
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 800),
+                y: -50,
+                rotate: 0,
+                opacity: 0.5
+              }}
+              animate={{ 
+                y: (typeof window !== 'undefined' ? window.innerHeight : 600) + 50,
+                rotate: 360
+              }}
+              transition={{
+                duration: 4 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 3
+              }}
+            >
+              {['⭐', '✨', '👨', '👩'][Math.floor(Math.random() * 4)]}
+            </motion.div>
+          ))}
+        </div>
+
+        <div className="text-center max-w-lg relative z-10">
+          {/* Chef Léo animé */}
+          <motion.div
+            className="mb-6 relative"
+            animate={{ 
+              y: [0, -15, 0],
+              rotate: [0, 3, -3, 0]
+            }}
+            transition={{ 
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          >
+            <div className={deviceType === 'tablet' ? 'text-8xl' : 'text-9xl'}>🦁</div>
+            <div className="absolute top-0 right-1/2 translate-x-1/2 text-5xl">👨‍🍳</div>
+          </motion.div>
+
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: "spring", bounce: 0.5 }}
+          >
+            <h1 className="text-neutral-900 mb-4">Bravo Champion !</h1>
+          </motion.div>
+
+          <motion.p
+            className={`text-neutral-700 mb-8 ${deviceType === 'tablet' ? 'text-lg' : 'text-xl'} bg-white/90 backdrop-blur-sm rounded-2xl ${deviceType === 'tablet' ? 'p-5' : 'p-6'} border-3 border-purple-300 shadow-xl`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            🎉 Tu as terminé ta commande !<br />
+            <strong className="text-purple-600">Passe maintenant la tablette à un adulte</strong> pour qu'il puisse continuer la commande.
+          </motion.p>
+
+          <motion.div
+            className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-2xl p-5 mb-8 shadow-2xl"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4, type: "spring" }}
+          >
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <Star className="w-6 h-6 fill-white" />
+              <Star className="w-8 h-8 fill-white" />
+              <Star className="w-6 h-6 fill-white" />
+            </div>
+            <div className="text-2xl mb-2">Tu as gagné {stars} étoiles !</div>
+            {selectedRewards.length > 0 && (
+              <div className="text-sm opacity-90">
+                + {selectedRewards.length} cadeau{selectedRewards.length > 1 ? 'x' : ''} débloqué{selectedRewards.length > 1 ? 's' : ''} !
+              </div>
+            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.6, type: "spring", bounce: 0.6 }}
+          >
+            <Button
+              size="lg"
+              className={`w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-2xl ${
+                deviceType === 'tablet' ? 'text-lg px-6 py-5' : 'text-xl px-8 py-6'
+              }`}
+              onClick={() => {
+                if (onBackToMenu) {
+                  onBackToMenu();
+                }
+              }}
+            >
+              Continuer la commande (Adulte) 👨👩
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   // Écran de bienvenue
   if (missionStep === 'welcome') {

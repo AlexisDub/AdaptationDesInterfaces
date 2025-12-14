@@ -69,19 +69,7 @@ export function ModeSelectionScreen({ onSelectMode, deviceType }: ModeSelectionS
 
         {/* Central Divider - Animated */}
         <div className="relative w-1 bg-gradient-to-b from-orange-300 via-purple-300 to-purple-300 z-10">
-          <motion.div
-            animate={{
-              y: [0, 100, 0],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-xl border-4 border-neutral-200 flex items-center justify-center"
-          >
-            <div className="text-xl">{restaurantConfig.logo}</div>
-          </motion.div>
+          {/* Logo assiette supprimé */}
         </div>
 
         {/* Right Side - Mode Enfant */}

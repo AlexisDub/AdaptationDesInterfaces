@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { dishes, type Dish } from '../data/dishes';
 import { Button } from './ui/button';
-import { Clock, Zap, Coffee, Utensils, Sparkles, TrendingUp, Timer, Leaf, Pizza, ChevronRight, ChevronDown, ChevronUp, SlidersHorizontal, ArrowLeft, X } from 'lucide-react';
+import { Clock, Zap, Coffee, Utensils, Sparkles, TrendingUp, Timer, Leaf, Pizza, ChevronRight, ChevronDown, ChevronUp, SlidersHorizontal, ArrowLeft, X, Minus, Plus } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { IngredientSearchBar, type IngredientFilters } from './IngredientSearchBar';
 import { AdvancedFilters, type AdvancedFilterOptions, applyAdvancedFilters } from './AdvancedFilters';
+import { ViewModeToggle, type DisplayMode } from './ViewModeToggle';
 
 interface RushHourModeProps {
   deviceType: 'tablet' | 'smartphone';
@@ -40,6 +41,7 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'entrée' | 'plat' | 'dessert'>('all');
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('grid');
 
   if (!timePreference) {
     return (
@@ -219,7 +221,7 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
   };
 
   return (
-    <div className={deviceType === 'smartphone' ? 'p-2' : 'p-4'}>
+    <div className={deviceType === 'smartphone' ? 'p-2 relative' : 'p-4 relative'}>
       {/* En-tête avec indicateur de temps - SUPPRIMÉ POUR GAGNER DE LA PLACE */}
       
       {/* Toggle View Mode - Seulement si pas en mode category-detail */}
@@ -303,53 +305,124 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
       )}
 
       {/* Vue Détail Catégorie */}
-      {viewMode === 'category-detail' && selectedRushCategory && (
-        <div>
-          {/* Bouton retour */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleBackToSuggestions}
-            className="mb-4 text-sm"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour aux suggestions
-          </Button>
+      {viewMode === 'category-detail' && selectedRushCategory && (() => {
+        const category = categoriesWithDishes.find(c => c.id === selectedRushCategory);
+        if (!category) return null;
+        
+        const IconComponent = category.icon;
+        const categoryDishes = category.dishes;
+        
+        return (
+          <div>
+            {/* Bouton retour */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBackToSuggestions}
+              className="mb-4 text-sm"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Retour aux suggestions
+            </Button>
 
-          {/* En-tête de la catégorie */}
-          {(() => {
-            const category = categoriesWithDishes.find(c => c.id === selectedRushCategory);
-            if (!category) return null;
-            
-            const IconComponent = category.icon;
-            return (
-              <div className="mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <IconComponent className={`w-6 h-6 ${category.iconColor}`} />
-                  <h2 className="text-neutral-900 text-xl">{category.name}</h2>
-                </div>
-                <p className="text-neutral-600 text-sm">{category.count} {category.count > 1 ? 'plats disponibles' : 'plat disponible'}</p>
+            {/* En-tête de la catégorie */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <IconComponent className={`w-6 h-6 ${category.iconColor}`} />
+                <h2 className="text-neutral-900 text-xl">{category.name}</h2>
               </div>
-            );
-          })()}
+              <p className="text-neutral-600 text-sm">{category.count} {category.count > 1 ? 'plats disponibles' : 'plat disponible'}</p>
+            </div>
 
-          {/* Grille de plats */}
-          <div className={`grid ${deviceType === 'tablet' ? 'grid-cols-4 gap-3' : 'grid-cols-3 gap-2'}`}>
-            {categoriesWithDishes
-              .find(c => c.id === selectedRushCategory)
-              ?.dishes.map(dish => (
-                <DishQuickCard
-                  key={dish.id}
-                  dish={dish}
-                  onAddToCart={onAddToCart}
-                  onDishClick={handleDishClick}
-                  deviceType={deviceType}
-                  getItemQuantity={getItemQuantity}
-                />
-              ))}
+            {/* Grille ou liste de plats */}
+            <div className={displayMode === 'grid' ? `grid ${deviceType === 'tablet' ? 'grid-cols-4 gap-3' : 'grid-cols-3 gap-2'}` : 'space-y-1'}>
+              {categoryDishes.map(dish => {
+                const quantity = getItemQuantity ? getItemQuantity(dish.id) : 0;
+                
+                // Mode liste pour smartphone - Très compact sans image
+                if (displayMode === 'list' && deviceType === 'smartphone') {
+                  return (
+                    <div
+                      key={dish.id}
+                      onClick={() => handleDishClick(dish)}
+                      className="bg-white rounded-lg px-3 py-2 flex gap-2 items-center border border-neutral-200 hover:border-orange-400 transition-colors cursor-pointer active:bg-neutral-50"
+                    >
+                      {/* Temps de préparation */}
+                      <div className="flex items-center gap-1 text-orange-600 flex-shrink-0">
+                        <Clock className="w-3 h-3" />
+                        <span className="text-xs">{dish.prepTime}</span>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="text-sm text-neutral-900 line-clamp-1 flex-1">{dish.name}</h3>
+                          <span className="text-sm text-orange-600 flex-shrink-0">{dish.price.toFixed(2)}€</span>
+                        </div>
+                      </div>
+                      {quantity > 0 ? (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const currentQty = getItemQuantity ? getItemQuantity(dish.id) : 0;
+                              if (currentQty > 1) {
+                                onAddToCart(dish);
+                              }
+                            }}
+                            className="w-7 h-7 bg-neutral-100 rounded-full flex items-center justify-center hover:bg-neutral-200 transition-colors"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-sm text-neutral-700 min-w-[1.5rem] text-center">{quantity}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAddToCart(dish);
+                            }}
+                            className="w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddToCart(dish);
+                          }}
+                          className="flex-shrink-0 w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+                
+                // Mode grille (par défaut)
+                return (
+                  <DishQuickCard
+                    key={dish.id}
+                    dish={dish}
+                    onAddToCart={onAddToCart}
+                    onDishClick={handleDishClick}
+                    deviceType={deviceType}
+                    getItemQuantity={getItemQuantity}
+                  />
+                );
+              })}
+            </div>
+            
+            {/* View Mode Toggle - Only on smartphone when dishes are present */}
+            {deviceType === 'smartphone' && categoryDishes.length > 0 && (
+              <ViewModeToggle
+                displayMode={displayMode}
+                onToggle={() => setDisplayMode(displayMode === 'grid' ? 'list' : 'grid')}
+              />
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Vue "Tous les plats" avec filtres sticky */}
       {viewMode === 'all-dishes' && (
@@ -451,23 +524,96 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
 
           {/* Liste des plats */}
           {filteredDishes.length > 0 ? (
-            <div className={`grid ${deviceType === 'tablet' ? 'grid-cols-4 gap-3 mt-4' : 'grid-cols-3 gap-2 mt-1'}`}>
-              {filteredDishes.map(dish => (
-                <DishQuickCard
-                  key={dish.id}
-                  dish={dish}
-                  onAddToCart={onAddToCart}
-                  onDishClick={handleDishClick}
-                  deviceType={deviceType}
-                  getItemQuantity={getItemQuantity}
-                />
-              ))}
+            <div className={displayMode === 'grid' ? `grid ${deviceType === 'tablet' ? 'grid-cols-4 gap-3 mt-4' : 'grid-cols-3 gap-2 mt-1'}` : 'space-y-1 mt-1'}>
+              {filteredDishes.map(dish => {
+                const quantity = getItemQuantity ? getItemQuantity(dish.id) : 0;
+                
+                // Mode liste pour smartphone - Très compact sans image
+                if (displayMode === 'list' && deviceType === 'smartphone') {
+                  return (
+                    <div
+                      key={dish.id}
+                      onClick={() => handleDishClick(dish)}
+                      className="bg-white rounded-lg px-3 py-2 flex gap-2 items-center border border-neutral-200 hover:border-orange-400 transition-colors cursor-pointer active:bg-neutral-50"
+                    >
+                      {/* Temps de préparation */}
+                      <div className="flex items-center gap-1 text-orange-600 flex-shrink-0">
+                        <Clock className="w-3 h-3" />
+                        <span className="text-xs">{dish.prepTime}</span>
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className="text-sm text-neutral-900 line-clamp-1 flex-1">{dish.name}</h3>
+                          <span className="text-sm text-orange-600 flex-shrink-0">{dish.price.toFixed(2)}€</span>
+                        </div>
+                      </div>
+                      {quantity > 0 ? (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const currentQty = getItemQuantity ? getItemQuantity(dish.id) : 0;
+                              if (currentQty > 1) {
+                                onAddToCart(dish);
+                              }
+                            }}
+                            className="w-7 h-7 bg-neutral-100 rounded-full flex items-center justify-center hover:bg-neutral-200 transition-colors"
+                          >
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-sm text-neutral-700 min-w-[1.5rem] text-center">{quantity}</span>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onAddToCart(dish);
+                            }}
+                            className="w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"
+                          >
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddToCart(dish);
+                          }}
+                          className="flex-shrink-0 w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
+                
+                // Mode grille (par défaut)
+                return (
+                  <DishQuickCard
+                    key={dish.id}
+                    dish={dish}
+                    onAddToCart={onAddToCart}
+                    onDishClick={handleDishClick}
+                    deviceType={deviceType}
+                    getItemQuantity={getItemQuantity}
+                  />
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-12">
               <p className="text-neutral-600 mb-2">Aucun plat trouvé avec ces filtres</p>
               <p className="text-sm text-neutral-500">Essayez de modifier vos critères de recherche</p>
             </div>
+          )}
+
+          {/* View Mode Toggle - Only on smartphone when dishes are present */}
+          {deviceType === 'smartphone' && filteredDishes.length > 0 && (
+            <ViewModeToggle
+              displayMode={displayMode}
+              onToggle={() => setDisplayMode(displayMode === 'grid' ? 'list' : 'grid')}
+            />
           )}
         </div>
       )}

@@ -189,7 +189,7 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
 
       {/* Content */}
       <div className="flex-1 overflow-hidden flex">
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto relative">
           {viewMode === 'normal' && (
             <>
               {/* Rush Hour Banner - Only show if rush hour and banner not dismissed */}

@@ -7,6 +7,7 @@ import { AdvancedFilters, type AdvancedFilterOptions, applyAdvancedFilters } fro
 import { Sparkles, X, Plus, Minus, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from './ui/button';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ViewModeToggle, type DisplayMode } from './ViewModeToggle';
 
 interface MenuViewProps {
   deviceType: 'tablet' | 'smartphone';
@@ -34,6 +35,7 @@ export function MenuView({
     cuisine: []
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>('grid');
 
   // Filter dishes by ingredients
   const ingredientFilteredDishes = dishes.filter(dish => {
@@ -221,13 +223,65 @@ export function MenuView({
       </div>
 
       {/* Dishes Grid */}
-      <div className={`
+      <div className={displayMode === 'grid' ? `
         grid
         ${deviceType === 'tablet' ? 'grid-cols-4 gap-3 mt-4' : 'grid-cols-3 gap-2 mt-1'}
-      `}>
+      ` : 'space-y-1 mt-1'}>
         {filteredDishes.map((dish) => {
           const quantity = getItemQuantity ? getItemQuantity(dish.id) : 0;
           
+          // Mode liste pour smartphone - Très compact sans image
+          if (displayMode === 'list' && deviceType === 'smartphone') {
+            return (
+              <div
+                key={dish.id}
+                onClick={() => handleDishClick(dish)}
+                className="bg-white rounded-lg px-3 py-2 flex gap-2 items-center border border-neutral-200 hover:border-orange-400 transition-colors cursor-pointer active:bg-neutral-50"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-sm text-neutral-900 line-clamp-1 flex-1">{dish.name}</h3>
+                    <span className="text-sm text-orange-600 flex-shrink-0">{dish.price.toFixed(2)}€</span>
+                  </div>
+                </div>
+                {quantity > 0 ? (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToCart(dish, -1);
+                      }}
+                      className="w-7 h-7 bg-neutral-100 rounded-full flex items-center justify-center hover:bg-neutral-200 transition-colors"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="text-sm text-neutral-700 min-w-[1.5rem] text-center">{quantity}</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAddToCart(dish, 1);
+                      }}
+                      className="w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAddToCart(dish, 1);
+                    }}
+                    className="flex-shrink-0 w-7 h-7 bg-orange-500 text-white rounded-full flex items-center justify-center hover:bg-orange-600 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            );
+          }
+          
+          // Mode grille (par défaut)
           return (
             <DishCard
               key={dish.id}
@@ -254,6 +308,14 @@ export function MenuView({
           <p className="text-neutral-600 mb-2">Aucun plat trouvé avec ces filtres</p>
           <p className="text-sm text-neutral-500">Essayez de modifier vos critères de recherche</p>
         </div>
+      )}
+
+      {/* View Mode Toggle - Only on smartphone when dishes are present */}
+      {deviceType === 'smartphone' && filteredDishes.length > 0 && (
+        <ViewModeToggle
+          displayMode={displayMode}
+          onToggle={() => setDisplayMode(displayMode === 'grid' ? 'list' : 'grid')}
+        />
       )}
 
       {/* Dish Detail Modal */}
