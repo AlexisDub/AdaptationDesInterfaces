@@ -12,6 +12,10 @@ export default function App() {
   const modeParam = urlParams.get('mode');
   const tableParam = urlParams.get('idtable');
   
+  // Detect if running as PWA (standalone mode)
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                (window.navigator as any).standalone === true;
+  
   // Déterminer le type de dispositif basé sur l'URL
   const [deviceType] = useState<'tablet' | 'smartphone'>(
     modeParam === 'phone' ? 'smartphone' : 'tablet'
@@ -70,8 +74,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-neutral-100">
       {/* Device Display */}
-      {deviceType === 'smartphone' ? (
-        // Mode téléphone : Conteneur plein écran avec dimensions viewport
+      {isPWA || deviceType === 'smartphone' ? (
+        // Mode PWA ou téléphone : Conteneur plein écran avec dimensions viewport
         <div className="fixed inset-0 bg-white overflow-hidden">
           <div className="h-full w-full">
             {/* Show table selection first for tablet, skip for smartphone */}
@@ -94,7 +98,7 @@ export default function App() {
           </div>
         </div>
       ) : (
-        // Mode tablette : Simulation centrée
+        // Mode tablette dans navigateur : Simulation centrée
         <div className="flex items-center justify-center min-h-screen p-4">
           <div className="bg-white shadow-2xl transition-all duration-500 w-full max-w-6xl aspect-[4/3] rounded-2xl">
             {/* Show table selection first for tablet, skip for smartphone */}
