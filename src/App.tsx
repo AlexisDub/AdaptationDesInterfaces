@@ -57,11 +57,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-neutral-100">
-      {/* Device Selector - Affiché uniquement si pas de mode URL */}
-      {!isUrlMode && (
-        <DeviceSelector deviceType={deviceType} setDeviceType={setDeviceType} />
-      )}
-      
       {/* Debug indicator - À retirer en production */}
       {isRushMode && (
         <div className="fixed top-20 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
@@ -70,7 +65,7 @@ export default function App() {
       )}
       
       {/* Device Simulation */}
-      <div className={`flex items-center justify-center p-4 ${isUrlMode ? 'min-h-screen' : 'min-h-[calc(100vh-80px)]'}`}>
+      <div className="flex items-center justify-center p-4 min-h-screen">
         <div 
           className={`bg-white shadow-2xl transition-all duration-500 ${
             deviceType === 'tablet' 
