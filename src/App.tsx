@@ -71,25 +71,27 @@ export default function App() {
     <div className="min-h-screen bg-neutral-100">
       {/* Device Display */}
       {deviceType === 'smartphone' ? (
-        // Mode téléphone : Plein écran
-        <div className="h-screen bg-white">
-          {/* Show table selection first for tablet, skip for smartphone */}
-          {deviceType === 'tablet' && tableNumber === null ? (
-            <TableSelectionScreen onSelectTable={handleTableSelection} />
-          ) : !userMode ? (
-            <ModeSelectionScreen 
-              onSelectMode={setUserMode}
-              deviceType={deviceType}
-            />
-          ) : (
-            <MenuInterface 
-              deviceType={deviceType} 
-              isRushHour={isRushMode}
-              userMode={userMode}
-              tableNumber={tableNumber!}
-              onResetMode={handleResetMode}
-            />
-          )}
+        // Mode téléphone : Conteneur plein écran avec dimensions viewport
+        <div className="fixed inset-0 bg-white overflow-hidden">
+          <div className="h-full w-full">
+            {/* Show table selection first for tablet, skip for smartphone */}
+            {deviceType === 'tablet' && tableNumber === null ? (
+              <TableSelectionScreen onSelectTable={handleTableSelection} />
+            ) : !userMode ? (
+              <ModeSelectionScreen 
+                onSelectMode={setUserMode}
+                deviceType={deviceType}
+              />
+            ) : (
+              <MenuInterface 
+                deviceType={deviceType} 
+                isRushHour={isRushMode}
+                userMode={userMode}
+                tableNumber={tableNumber!}
+                onResetMode={handleResetMode}
+              />
+            )}
+          </div>
         </div>
       ) : (
         // Mode tablette : Simulation centrée
