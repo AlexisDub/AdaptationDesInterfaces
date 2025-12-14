@@ -2,17 +2,23 @@ import { useState, useEffect } from 'react';
 import { MenuInterface } from './components/MenuInterface';
 import { DeviceSelector } from './components/DeviceSelector';
 import { ModeSelectionScreen } from './components/ModeSelectionScreen';
+import { TableNumberInput } from './components/TableNumberInput';
 import { Smartphone, Tablet } from 'lucide-react';
 import { getRushStatus, RUSH_CHECK_INTERVAL } from './data/rushService';
 
 export type UserMode = 'normal' | 'child' | null;
 
 export default function App() {
-  // Détection du mode depuis l'URL
+  // Détection du mode et du numéro de table depuis l'URL
   const getInitialDeviceType = (): 'tablet' | 'smartphone' => {
     const params = new URLSearchParams(window.location.search);
     const mode = params.get('mode');
     return mode === 'phone' ? 'smartphone' : 'tablet';
+  };
+
+  const getTableNumberFromUrl = (): string | null => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('idtable');
   };
 
   const [deviceType, setDeviceType] = useState<'tablet' | 'smartphone'>(getInitialDeviceType());
@@ -20,6 +26,7 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     return params.has('mode');
   });
+  const [tableNumber, setTableNumber] = useState<string | null>(getTableNumberFromUrl());
   const [userMode, setUserMode] = useState<UserMode>(null);
   const [isRushMode, setIsRushMode] = useState(false);
   const [ordersInProgress, setOrdersInProgress] = useState(0);
@@ -55,31 +62,76 @@ export default function App() {
     setUserMode(null);
   };
 
+  // Handle table number submission (for tablet)
+  const handleTableNumberSubmit = (number: string) => {
+    setTableNumber(number);
+  };
+
   return (
     <div className="min-h-screen bg-neutral-100">
       {/* Debug indicator - À retirer en production */}
       {isRushMode && (
-        <div className="fixed top-20 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
-          🔥 RUSH MODE: {ordersInProgress} commandes
+      {/* Device Simulation */}
+      {isUrlMode && deviceType === 'smartphone' ? (
+        // Mode smartphone plein écran via URL
+        <div className="w-full h-screen bg-white overflow-hidden">
+          {!tableNumber ? (
+            <TableNumberInput 
+              onSubmit={handleTableNumberSubmit}
+              deviceType={deviceType}
+            />
+          ) : !userMode ? (
+            <ModeSelectionScreen 
+              onSelectMode={setUserMode}
+              deviceType={deviceType}
+            />
+          ) : (
+            <MenuInterface 
+              deviceType={deviceType} 
+              isRushHour={isRushMode}
+              userMode={userMode}
+              onResetMode={handleResetMode}
+              tableNumber={tableNumber}
+            />
+          )}
+        </div>
+      ) : (
+        // Mode tablette avec simulation
+        <div className="flex items-center justify-center p-4 min-h-screen">
+          <div 
+            className={`bg-white shadow-2xl transition-all duration-500 ${
+              deviceType === 'tablet' 
+                ? 'w-full max-w-6xl aspect-[4/3] rounded-2xl' 
+                : 'w-full max-w-md aspect-[9/16] rounded-3xl'
+            }`}
+          >
+            {!tableNumber ? (
+              <TableNumberInput 
+                onSubmit={handleTableNumberSubmit}
+                deviceType={deviceType}
+              />
+            ) : !userMode ? (
+              <ModeSelectionScreen 
+                onSelectMode={setUserMode}
+                deviceType={deviceType}
+              />
+            ) : (
+              <MenuInterface 
+                deviceType={deviceType} 
+                isRushHour={isRushMode}
+                userMode={userMode}
+                onResetMode={handleResetMode}
+                tableNumber={tableNumber}
+              />
+            )}
+          </div>
+        </div>
+      )}        onResetMode={handleResetMode}
+              />
+            )}
+          </div>
         </div>
       )}
-      
-      {/* Plein écran pour smartphone et tablette */}
-      <div className="w-full h-screen bg-white overflow-hidden">
-        {!userMode ? (
-          <ModeSelectionScreen 
-            onSelectMode={setUserMode}
-            deviceType={deviceType}
-          />
-        ) : (
-          <MenuInterface 
-            deviceType={deviceType} 
-            isRushHour={isRushMode}
-            userMode={userMode}
-            onResetMode={handleResetMode}
-          />
-        )}
-      </div>
     </div>
   );
 }

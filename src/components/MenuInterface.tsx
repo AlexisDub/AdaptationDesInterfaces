@@ -15,11 +15,12 @@ interface MenuInterfaceProps {
   isRushHour: boolean;
   userMode: UserMode;
   onResetMode: () => void;
+  tableNumber: string;
 }
 
 export type ViewMode = 'normal' | 'rush' | 'child' | 'cart' | 'order-confirmation';
 
-export function MenuInterface({ deviceType, isRushHour, userMode, onResetMode }: MenuInterfaceProps) {
+export function MenuInterface({ deviceType, isRushHour, userMode, onResetMode, tableNumber }: MenuInterfaceProps) {
   const [viewMode, setViewMode] = useState<ViewMode>(userMode === 'child' ? 'child' : 'normal');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showRushBanner, setShowRushBanner] = useState(true);
@@ -98,6 +99,7 @@ export function MenuInterface({ deviceType, isRushHour, userMode, onResetMode }:
             </Button>
             <div>
               <h2 className="text-orange-900">Restaurant Le Gourmet</h2>
+              <p className="text-xs text-neutral-600">Table {tableNumber}</p>
             </div>
           </div>
           
@@ -234,6 +236,8 @@ export function MenuInterface({ deviceType, isRushHour, userMode, onResetMode }:
             <OrderConfirmation
               onReset={handleBackToMenu}
               deviceType={deviceType}
+              tableNumber={tableNumber}
+              cart={cart}
             />
           )}
         </div>

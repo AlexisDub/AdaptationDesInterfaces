@@ -1,13 +1,57 @@
+import { useEffect } from 'react';
 import { CheckCircle, ChefHat, Clock, ArrowLeft } from 'lucide-react';
 import { Button } from './ui/button';
 import { motion } from 'motion/react';
+import type { CartItem } from './CartSidebar';
 
 interface OrderConfirmationProps {
   onReset: () => void;
   deviceType: 'tablet' | 'smartphone';
+  tableNumber: string;
+  cart: CartItem[];
 }
 
-export function OrderConfirmation({ onReset, deviceType }: OrderConfirmationProps) {
+export function OrderConfirmation({ onReset, deviceType, tableNumber, cart }: OrderConfirmationProps) {
+  // Envoyer la commande au backend au montage du composant
+  useEffect(() => {
+    const sendOrderToBackend = async () => {
+      try {
+        const orderData = {
+          tableNumber,
+          items: cart.map(item => ({
+            dishId: item.dish.id,
+            dishName: item.dish.name,
+            quantity: item.quantity,
+            price: item.dish.price
+          })),
+          totalAmount: cart.reduce((sum, item) => sum + (item.dish.price * item.quantity), 0),
+          timestamp: new Date().toISOString()
+        };
+
+        console.log('Envoi de la commande au backend:', orderData);
+        
+        // TODO: Remplacer par l'appel API réel
+        // const response = await fetch('/api/orders', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify(orderData)
+        // });
+        
+        // if (!response.ok) {
+        //   throw new Error('Erreur lors de l\'envoi de la commande');
+        // }
+        
+        // Pour l'instant, on simule l'envoi
+        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log('Commande envoyée avec succès pour la table', tableNumber);
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi de la commande:', error);
+      }
+    };
+
+    sendOrderToBackend();
+  }, [tableNumber, cart]);
+  
   return (
     <div className="h-full bg-gradient-to-br from-green-50 via-orange-50 to-white flex items-center justify-center p-6">
       <motion.div
@@ -63,6 +107,11 @@ export function OrderConfirmation({ onReset, deviceType }: OrderConfirmationProp
           <p className="text-neutral-700 mb-3">
             Votre commande a bien été transmise à notre équipe.
           </p>
+          <div className="bg-orange-50 rounded-lg px-3 py-2 mb-3">
+            <p className="text-sm text-orange-800 font-medium">
+              Table n°{tableNumber}
+            </p>
+          </div>
           <div className="flex items-center justify-center gap-2 text-sm text-neutral-600">
             <Clock className="w-4 h-4 text-orange-600" />
             <span>Temps de préparation estimé : 15-20 min</span>
