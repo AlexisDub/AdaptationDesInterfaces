@@ -793,7 +793,7 @@ export const restaurantData = {
       "popularity": 4,
       "isSpecialOfDay": false,
       "isQuick": true,
-      "imageUrl": "https://images.unsplash.com/photo-1588710409495-fc23eb8d3c47?w=800",
+      "imageUrl": "https://img.cuisineaz.com/660x495/2017/08/04/i131297-.webp",
       "kidFriendly": false,
       "hasVegetables": true,
       "ingredients": ["quinoa", "avocat", "pois chiches", "légumes", "tahini"],
