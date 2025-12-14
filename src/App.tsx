@@ -7,19 +7,18 @@ import { getRushStatus, RUSH_CHECK_INTERVAL, getCurrentPrepTime } from './data/r
 export type UserMode = 'normal' | 'child' | null;
 
 export default function App() {
-  // Lire les paramètres URL au démarrage
+  // Lire les paramètres URL
   const urlParams = new URLSearchParams(window.location.search);
   const modeParam = urlParams.get('mode');
-  const idTableParam = urlParams.get('idtable');
+  const tableParam = urlParams.get('idtable');
   
-  // Mode par défaut : tablette (sauf si mode=phone dans l'URL)
-  const [deviceType, setDeviceType] = useState<'tablet' | 'smartphone'>(
+  // Déterminer le type de dispositif basé sur l'URL
+  const [deviceType] = useState<'tablet' | 'smartphone'>(
     modeParam === 'phone' ? 'smartphone' : 'tablet'
   );
   const [userMode, setUserMode] = useState<UserMode>(null);
-  // Numéro de table : null par défaut, ou la valeur de l'URL pour mode phone
   const [tableNumber, setTableNumber] = useState<number | null>(
-    modeParam === 'phone' && idTableParam ? parseInt(idTableParam, 10) : null
+    deviceType === 'smartphone' && tableParam ? parseInt(tableParam) : null
   );
   const [isRushMode, setIsRushMode] = useState(false);
   const [ordersInProgress, setOrdersInProgress] = useState(0);
@@ -68,25 +67,23 @@ export default function App() {
     setUserMode(null);
   };
 
-  // Le numéro de table est maintenant géré via les paramètres URL
-
   return (
     <div className="min-h-screen bg-neutral-100">
       {/* Debug indicator - À retirer en production */}
       {isRushMode && (
-        <div className="fixed top-4 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
+        <div className="fixed top-20 left-4 bg-red-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
           🔥 RUSH MODE: {ordersInProgress} commandes
         </div>
       )}
       
       {/* Debug: Temps cumulé - À retirer en production */}
-      <div className="fixed top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
+      <div className="fixed top-20 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
         ⏱️ Temps cumulé: {currentPrepTime} min
       </div>
       
       {/* Debug: Table number - À retirer en production */}
       {tableNumber !== null && (
-        <div className="fixed top-16 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
+        <div className="fixed top-32 right-4 bg-green-600 text-white px-3 py-1 rounded-full text-xs z-50 shadow-lg">
           🍽️ Table: {tableNumber}
         </div>
       )}
