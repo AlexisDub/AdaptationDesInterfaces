@@ -240,6 +240,7 @@ STRUCTURE À ENVOYER:
 {
   "orderId": string,              // ID unique de commande
   "timestamp": string,            // ISO 8601 datetime
+  "tableNumber": number,          // ⭐ NOUVEAU: Numéro de table (1-999)
   "deviceType": string,           // "tablet" | "smartphone"
   "userMode": string,             // "normal" | "child"
   "items": [
@@ -252,11 +253,18 @@ STRUCTURE À ENVOYER:
   ],
   "totalPrice": number,           // Prix total
   "totalItems": number,           // Nombre total d'articles
+  "estimatedPrepTime": number,    // ⭐ NOUVEAU: Temps de préparation estimé (minutes)
   "childModeData": {              // Seulement si userMode = "child"
     "starsEarned": number,        // Étoiles gagnées
     "rewardsSelected": string[]   // IDs des récompenses choisies
   }
 }
+
+NOTES IMPORTANTES SUR LE NUMÉRO DE TABLE:
+- En mode tablette: Le serveur saisit le numéro de table sur un écran dédié avant de sélectionner le mode
+- En mode smartphone: Le numéro de table est codé en dur à 1 (temporaire, à modifier plus tard selon les besoins)
+- Le numéro de table permet d'associer la commande à la table du client dans le système de gestion du restaurant
+- Plage valide: 1-999
 
 ================================================================================
 10. COMPATIBILITÉ ET MIGRATION

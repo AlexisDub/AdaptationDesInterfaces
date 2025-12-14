@@ -63,18 +63,18 @@ export function DishCard({
           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
         />
         {dish.isSpecialOfDay && !hasQuantity && (
-          <div className="absolute top-2 right-2 bg-orange-600 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-            <Star className="w-3 h-3 fill-current" />
-            Plat du jour
+          <div className={`absolute top-2 right-2 bg-orange-600 text-white rounded-full flex items-center gap-1 ${deviceType === 'smartphone' ? 'px-1.5 py-0.5 text-xs' : 'px-2 py-1 text-xs'}`}>
+            <Star className={`${deviceType === 'smartphone' ? 'w-2.5 h-2.5' : 'w-3 h-3'} fill-current`} />
+            {deviceType === 'tablet' && 'Plat du jour'}
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-3">
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h4 className="text-neutral-900 line-clamp-2 flex-1">{dish.name}</h4>
-          <span className="text-orange-600 whitespace-nowrap text-sm">{dish.price.toFixed(2)}€</span>
+      <div className={deviceType === 'smartphone' ? 'p-2' : 'p-3'}>
+        <div className={`flex items-start justify-between gap-2 ${deviceType === 'smartphone' ? 'mb-1' : 'mb-2'}`}>
+          <h4 className={`text-neutral-900 line-clamp-2 flex-1 ${deviceType === 'smartphone' ? 'text-xs leading-tight' : ''}`}>{dish.name}</h4>
+          <span className={`text-orange-600 whitespace-nowrap ${deviceType === 'smartphone' ? 'text-xs' : 'text-sm'}`}>{dish.price.toFixed(2)}€</span>
         </div>
 
         {/* Tablet Mode: Quantity Controls */}

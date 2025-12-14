@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { type Dish } from '../data/dishes';
 import { 
   childRewards, 
@@ -7,6 +7,14 @@ import {
   rewardToDish 
 } from '../data/dataLoader';
 import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
 import { ChefHat, Star, Sparkles, Trophy, Crown, Gift, Zap, ShoppingCart, ArrowLeft, Home, X, Trash2 } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { motion, AnimatePresence } from 'motion/react';
@@ -37,6 +45,29 @@ const STARS_PER_CATEGORY = {
   dessert: 2
 };
 
+// Prix réduits pour les portions enfant (selon la catégorie)
+const CHILD_PRICE_MULTIPLIER = {
+  entrée: 0.6,  // -40% pour les entrées
+  plat: 0.6,    // -40% pour les plats
+  dessert: 0.7  // -30% pour les desserts
+};
+
+// Fonction pour obtenir le prix enfant selon la catégorie
+const getChildPrice = (dish: Dish, category: 'entrée' | 'plat' | 'dessert'): number => {
+  return parseFloat((dish.price * CHILD_PRICE_MULTIPLIER[category]).toFixed(2));
+};
+
+// Fonction pour créer une version "portion enfant" d'un plat
+const createChildPortion = (dish: Dish, category: 'entrée' | 'plat' | 'dessert'): Dish => {
+  return {
+    ...dish,
+    id: `${dish.id}-child`,
+    name: `${dish.name} (Portion enfant)`,
+    price: getChildPrice(dish, category),
+    description: `${dish.description} - Portion adaptée aux enfants`
+  };
+};
+
 export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: ChildModeProps) {
   const [missionStep, setMissionStep] = useState<MissionStep>('welcome');
   const [plate, setPlate] = useState<PlateState>({
@@ -48,6 +79,15 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
   const [showConfetti, setShowConfetti] = useState(false);
   const [flippedCards, setFlippedCards] = useState<Set<string>>(new Set());
   const [selectedRewards, setSelectedRewards] = useState<typeof rewards>([]);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll vers le haut à chaque changement d'étape
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [missionStep]);
 
   // Filtrer les plats selon la catégorie actuelle
   const getCurrentCategoryDishes = () => {
@@ -171,10 +211,10 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
   };
 
   const handleFinalValidation = () => {
-    // Ajouter tous les plats au panier
-    if (plate.entrée) onAddToCart(plate.entrée);
-    if (plate.plat) onAddToCart(plate.plat);
-    if (plate.dessert) onAddToCart(plate.dessert);
+    // Ajouter tous les plats au panier avec portions enfant (prix réduit)
+    if (plate.entrée) onAddToCart(createChildPortion(plate.entrée, 'entrée'));
+    if (plate.plat) onAddToCart(createChildPortion(plate.plat, 'plat'));
+    if (plate.dessert) onAddToCart(createChildPortion(plate.dessert, 'dessert'));
     
     // Ajouter les récompenses au panier (gratuites !)
     selectedRewards.forEach(reward => {
@@ -191,7 +231,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
   // Écran de bienvenue
   if (missionStep === 'welcome') {
     return (
-      <div className="min-h-full flex items-center justify-center p-6 bg-gradient-to-br from-yellow-100 via-orange-100 to-pink-100 relative overflow-hidden">
+      <div ref={containerRef} className="h-full flex items-center justify-center p-6 bg-gradient-to-br from-yellow-100 via-orange-100 to-pink-100 relative overflow-y-auto">
         {/* Étoiles animées en arrière-plan */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           {[...Array(20)].map((_, i) => (
@@ -312,7 +352,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
     const hasAnyDish = plate.entrée || plate.plat || plate.dessert;
     
     return (
-      <div className="min-h-full flex items-center justify-center p-6 bg-gradient-to-br from-green-100 via-yellow-100 to-orange-100 relative overflow-hidden">
+      <div ref={containerRef} className="h-full p-6 bg-gradient-to-br from-green-100 via-yellow-100 to-orange-100 relative overflow-y-auto flex items-center justify-center">
         {/* Super confettis */}
         <AnimatePresence>
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -344,86 +384,101 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
           </div>
         </AnimatePresence>
 
-        <div className="text-center max-w-2xl relative z-10">
+        <div className="text-center max-w-2xl relative z-10 w-full">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
             transition={{ type: "spring", bounce: 0.6 }}
-            className="mb-6"
+            className="mb-4"
           >
-            <div className="text-9xl mb-4">🏆</div>
-            <h1 className="text-neutral-900 mb-4">BRAVO CHAMPION !</h1>
+            {hasAnyDish ? (
+              <>
+                <div className={deviceType === 'tablet' ? 'text-7xl mb-2' : 'text-9xl mb-4'}>🏆</div>
+                <h1 className={`text-neutral-900 ${deviceType === 'tablet' ? 'mb-2' : 'mb-4'}`}>BRAVO CHAMPION !</h1>
+              </>
+            ) : (
+              <>
+                <div className={deviceType === 'tablet' ? 'text-7xl mb-2' : 'text-9xl mb-4'}>😕</div>
+                <h1 className={`text-neutral-900 ${deviceType === 'tablet' ? 'mb-2' : 'mb-4'}`}>Bah alors, tu n'as pas faim ?</h1>
+              </>
+            )}
           </motion.div>
 
           <motion.div
-            className="bg-white rounded-3xl p-6 mb-6 shadow-2xl border-4 border-yellow-400"
+            className={`bg-white rounded-3xl p-4 shadow-2xl border-4 border-yellow-400 ${deviceType === 'tablet' ? 'mb-4' : 'mb-6'}`}
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <div className="flex items-center justify-center gap-3 mb-4">
+            <div className={`flex items-center justify-center gap-3 ${deviceType === 'tablet' ? 'mb-3' : 'mb-4'}`}>
               <Crown className="w-8 h-8 text-yellow-500" />
               <h2 className="text-purple-900">Ton Menu Parfait</h2>
               <Crown className="w-8 h-8 text-yellow-500" />
             </div>
 
             {hasAnyDish ? (
-              <div className={`grid gap-4 ${deviceType === 'tablet' ? 'grid-cols-3' : 'grid-cols-1'}`}>
+              <div className="space-y-3">
                 {plate.entrée && (
-                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl p-4 border-2 border-green-400 relative">
+                  <div className="bg-gradient-to-br from-green-100 to-emerald-100 rounded-2xl p-3 border-2 border-green-400 relative flex items-center gap-3">
                     <button
                       onClick={() => handleRemovePlateItem('entrée')}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors z-10"
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <div className="text-xs text-green-700 mb-2 flex items-center justify-center gap-1">
-                      <Sparkles className="w-3 h-3" /> Entrée (+2⭐)
-                    </div>
                     <ImageWithFallback
                       src={plate.entrée.imageUrl}
                       alt={plate.entrée.name}
-                      className="w-full aspect-square object-cover rounded-xl mb-2"
+                      className={deviceType === 'tablet' ? 'w-16 h-16 object-cover rounded-xl flex-shrink-0' : 'w-20 h-20 object-cover rounded-xl flex-shrink-0'}
                     />
-                    <div className="text-sm text-neutral-900">{plate.entrée.name}</div>
+                    <div className="flex-1 pr-6 text-left">
+                      <div className="text-xs text-green-700 mb-1 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" /> Entrée (+2⭐)
+                      </div>
+                      <div className="text-sm text-neutral-900">{plate.entrée.name}</div>
+                    </div>
                   </div>
                 )}
                 {plate.plat && (
-                  <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl p-4 border-2 border-orange-400 relative">
+                  <div className="bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl p-3 border-2 border-orange-400 relative flex items-center gap-3">
                     <button
                       onClick={() => handleRemovePlateItem('plat')}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors z-10"
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <div className="text-xs text-orange-700 mb-2 flex items-center justify-center gap-1">
-                      <Zap className="w-3 h-3" /> Plat Principal (+4⭐)
-                    </div>
                     <ImageWithFallback
                       src={plate.plat.imageUrl}
                       alt={plate.plat.name}
-                      className="w-full aspect-square object-cover rounded-xl mb-2"
+                      className={deviceType === 'tablet' ? 'w-16 h-16 object-cover rounded-xl flex-shrink-0' : 'w-20 h-20 object-cover rounded-xl flex-shrink-0'}
                     />
-                    <div className="text-sm text-neutral-900">{plate.plat.name}</div>
+                    <div className="flex-1 pr-6 text-left">
+                      <div className="text-xs text-orange-700 mb-1 flex items-center gap-1">
+                        <Zap className="w-3 h-3" /> Plat Principal (+4⭐)
+                      </div>
+                      <div className="text-sm text-neutral-900">{plate.plat.name}</div>
+                    </div>
                   </div>
                 )}
                 {plate.dessert && (
-                  <div className="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl p-4 border-2 border-pink-400 relative">
+                  <div className="bg-gradient-to-br from-pink-100 to-purple-100 rounded-2xl p-3 border-2 border-pink-400 relative flex items-center gap-3">
                     <button
                       onClick={() => handleRemovePlateItem('dessert')}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors z-10"
                     >
                       <X className="w-4 h-4" />
                     </button>
-                    <div className="text-xs text-pink-700 mb-2 flex items-center justify-center gap-1">
-                      <Gift className="w-3 h-3" /> Dessert (+2⭐)
-                    </div>
                     <ImageWithFallback
                       src={plate.dessert.imageUrl}
                       alt={plate.dessert.name}
-                      className="w-full aspect-square object-cover rounded-xl mb-2"
+                      className={deviceType === 'tablet' ? 'w-16 h-16 object-cover rounded-xl flex-shrink-0' : 'w-20 h-20 object-cover rounded-xl flex-shrink-0'}
                     />
-                    <div className="text-sm text-neutral-900">{plate.dessert.name}</div>
+                    <div className="flex-1 pr-6 text-left">
+                      <div className="text-xs text-pink-700 mb-1 flex items-center gap-1">
+                        <Gift className="w-3 h-3" /> Dessert (+2⭐)
+                      </div>
+                      <div className="text-sm text-neutral-900">{plate.dessert.name}</div>
+                    </div>
                   </div>
                 )}
               </div>
@@ -441,7 +496,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
             )}
 
             {hasAnyDish && (
-              <div className="mt-4 flex items-center justify-center gap-2">
+              <div className={`flex items-center justify-center gap-2 ${deviceType === 'tablet' ? 'mt-3' : 'mt-4'}`}>
                 <Star className="w-6 h-6 fill-yellow-400 stroke-yellow-500" />
                 <span className="text-2xl text-purple-600">Tu as {stars} étoiles !</span>
                 <Star className="w-6 h-6 fill-yellow-400 stroke-yellow-500" />
@@ -458,7 +513,9 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
             >
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-2xl text-xl px-8 py-6"
+                className={`w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-2xl ${
+                  deviceType === 'tablet' ? 'text-lg px-6 py-5' : 'text-xl px-8 py-6'
+                }`}
                 onClick={handleGoToCart}
               >
                 Voir mon panier ! 🛒
@@ -483,7 +540,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
   // Écran du panier
   if (missionStep === 'cart') {
     return (
-      <div className="min-h-full p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100">
+      <div ref={containerRef} className="min-h-full p-6 bg-gradient-to-br from-blue-100 via-purple-100 to-pink-100 overflow-y-auto">
         <div className="max-w-2xl mx-auto">
           {/* En-tête */}
           <motion.div
@@ -549,7 +606,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
                   />
                   <div className="flex-1">
                     <div className="text-sm text-neutral-900">{plate.entrée.name}</div>
-                    <div className="text-xs text-green-600">Entrée · {plate.entrée.price.toFixed(2)}€</div>
+                    <div className="text-xs text-green-600">Entrée · {(plate.entrée.price * CHILD_PRICE_MULTIPLIER['entrée']).toFixed(2)}€ <span className="text-neutral-500"> (Portion enfant)</span></div>
                   </div>
                   <div className="text-green-600 flex items-center gap-1">
                     +2 <Star className="w-3 h-3 fill-green-600" />
@@ -572,7 +629,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
                   />
                   <div className="flex-1">
                     <div className="text-sm text-neutral-900">{plate.plat.name}</div>
-                    <div className="text-xs text-orange-600">Plat · {plate.plat.price.toFixed(2)}€</div>
+                    <div className="text-xs text-orange-600">Plat · {(plate.plat.price * CHILD_PRICE_MULTIPLIER['plat']).toFixed(2)}€ <span className="text-neutral-500"> (Portion enfant)</span></div>
                   </div>
                   <div className="text-orange-600 flex items-center gap-1">
                     +4 <Star className="w-3 h-3 fill-orange-600" />
@@ -595,7 +652,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
                   />
                   <div className="flex-1">
                     <div className="text-sm text-neutral-900">{plate.dessert.name}</div>
-                    <div className="text-xs text-pink-600">Dessert · {plate.dessert.price.toFixed(2)}€</div>
+                    <div className="text-xs text-pink-600">Dessert · {(plate.dessert.price * CHILD_PRICE_MULTIPLIER['dessert']).toFixed(2)}€ <span className="text-neutral-500"> (Portion enfant)</span></div>
                   </div>
                   <div className="text-pink-600 flex items-center gap-1">
                     +2 <Star className="w-3 h-3 fill-pink-600" />
@@ -622,7 +679,11 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
                 <div className="flex justify-between items-center">
                   <span className="text-neutral-700">Total</span>
                   <span className="text-xl text-neutral-900">
-                    {((plate.entrée?.price || 0) + (plate.plat?.price || 0) + (plate.dessert?.price || 0)).toFixed(2)}€
+                    {(
+                      (plate.entrée ? getChildPrice(plate.entrée, 'entrée') : 0) + 
+                      (plate.plat ? getChildPrice(plate.plat, 'plat') : 0) + 
+                      (plate.dessert ? getChildPrice(plate.dessert, 'dessert') : 0)
+                    ).toFixed(2)}€
                   </span>
                 </div>
               </div>
@@ -647,11 +708,10 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
               
               <Button
                 size="lg"
-                variant="outline"
-                className="w-full border-2 border-purple-300 text-purple-600 hover:bg-purple-100 text-xl px-8 py-6"
-                onClick={handleFinalValidation}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-2xl text-xl px-8 py-6"
+                onClick={() => setShowConfirmDialog(true)}
               >
-                Valider et retourner au menu 🏠
+                Valider et retourner au menu ! 🏠
               </Button>
 
               <Button
@@ -676,7 +736,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
     const remainingStars = stars - totalSelectedStars;
 
     return (
-      <div className="min-h-full p-6 bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100">
+      <div ref={containerRef} className="min-h-full p-6 bg-gradient-to-br from-purple-100 via-pink-100 to-yellow-100 overflow-y-auto">
         <div className="max-w-3xl mx-auto">
           {/* En-tête */}
           <motion.div
@@ -746,7 +806,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
           )}
 
           {/* Grille de récompenses */}
-          <div className={`grid gap-4 mb-6 ${deviceType === 'tablet' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <div className={`grid mt-6 ${deviceType === 'tablet' ? 'grid-cols-3 gap-4' : 'grid-cols-2 gap-3'}`}>
             {rewards.map((reward, index) => {
               const canAfford = remainingStars >= reward.stars;
               return (
@@ -813,7 +873,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
   const currentStepIndex = progressSteps.indexOf(missionStep);
 
   return (
-    <div className="min-h-full p-4 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 relative overflow-hidden">
+    <div className="h-full flex flex-col bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 relative overflow-hidden">
       {/* Confettis lors de la sélection */}
       <AnimatePresence>
         {showConfetti && (
@@ -849,16 +909,16 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
 
       {/* En-tête avec Chef Léo */}
       <motion.div 
-        className="mb-6"
+        className={deviceType === 'tablet' ? 'mb-6 px-4 pt-4' : 'mb-4 px-4 pt-3'}
         initial={{ y: -50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
       >
         {/* Barre de progression */}
-        <div className="flex gap-2 mb-4">
+        <div className={deviceType === 'tablet' ? 'flex gap-2 mb-4' : 'flex gap-2 mb-2'}>
           {progressSteps.map((step, index) => (
             <div
               key={step}
-              className={`h-3 flex-1 rounded-full transition-all duration-500 ${
+              className={`${deviceType === 'tablet' ? 'h-3' : 'h-2'} flex-1 rounded-full transition-all duration-500 ${
                 index <= currentStepIndex
                   ? 'bg-gradient-to-r from-orange-500 to-pink-500 shadow-lg'
                   : 'bg-neutral-300'
@@ -868,10 +928,10 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
         </div>
 
         {/* Message de Chef Léo */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-4 border-3 border-orange-300 shadow-xl">
+        <div className={`bg-white/90 backdrop-blur-sm rounded-3xl ${deviceType === 'tablet' ? 'p-4' : 'p-3'} border-3 border-orange-300 shadow-xl`}>
           <div className="flex items-center gap-3">
             <motion.div
-              className="text-5xl"
+              className={deviceType === 'tablet' ? 'text-5xl' : 'text-4xl'}
               animate={{ 
                 rotate: [0, 10, -10, 0],
                 scale: [1, 1.1, 1]
@@ -885,12 +945,12 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
               🦁👨‍🍳
             </motion.div>
             <div className="flex-1">
-              <div className="text-sm text-orange-600 mb-1">Chef Léo te dit :</div>
-              <div className="text-neutral-900 text-sm">{chefLeoMessages[missionStep]}</div>
+              <div className={`text-orange-600 mb-1 ${deviceType === 'tablet' ? 'text-base' : 'text-sm'}`}>Chef Léo te dit :</div>
+              <div className={`text-neutral-900 ${deviceType === 'tablet' ? 'text-base' : 'text-sm'}`}>{chefLeoMessages[missionStep]}</div>
             </div>
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl px-4 py-2">
+            <div className={`bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-2xl ${deviceType === 'tablet' ? 'px-4 py-2' : 'px-3 py-1.5'}`}>
               <div className="text-xs opacity-90">Étoiles</div>
-              <div className="text-xl flex items-center gap-1">
+              <div className={`${deviceType === 'tablet' ? 'text-xl' : 'text-lg'} flex items-center gap-1`}>
                 {stars} <Star className="w-4 h-4 fill-yellow-300" />
               </div>
             </div>
@@ -898,34 +958,38 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
         </div>
       </motion.div>
 
-      {/* Assiette centrale */}
-      <PlateDisplay
-        plate={plate}
-        currentCategory={missionStep as 'entrée' | 'plat' | 'dessert'}
-        deviceType={deviceType}
-      />
+      {/* Contenu scrollable */}
+      <div className="flex-1 overflow-y-auto px-4 pb-4">
+        {/* Assiette centrale */}
+        <PlateDisplay
+          plate={plate}
+          currentCategory={missionStep as 'entrée' | 'plat' | 'dessert'}
+          deviceType={deviceType}
+        />
 
-      {/* Grille de cartes de plats */}
-      <div className={`grid gap-4 mt-6 ${deviceType === 'tablet' ? 'grid-cols-3' : 'grid-cols-2'}`}>
-        {currentDishes.map((dish, index) => (
-          <DishFlipCard
-            key={dish.id}
-            dish={dish}
-            index={index}
-            isFlipped={flippedCards.has(dish.id)}
-            onFlip={() => handleFlipCard(dish.id)}
-            onSelect={() => handleDishSelect(dish)}
-            encouragement={encouragements[Math.floor(Math.random() * encouragements.length)]}
-            stars={STARS_PER_CATEGORY[missionStep as 'entrée' | 'plat' | 'dessert']}
-          />
-        ))}
+        {/* Grille de cartes de plats */}
+        <div className={`grid mt-6 ${deviceType === 'tablet' ? 'grid-cols-3 gap-4' : 'grid-cols-2 gap-3'}`}>
+          {currentDishes.map((dish, index) => (
+            <DishFlipCard
+              key={dish.id}
+              dish={dish}
+              index={index}
+              isFlipped={flippedCards.has(dish.id)}
+              onFlip={() => handleFlipCard(dish.id)}
+              onSelect={() => handleDishSelect(dish)}
+              encouragement={encouragements[Math.floor(Math.random() * encouragements.length)]}
+              stars={STARS_PER_CATEGORY[missionStep as 'entrée' | 'plat' | 'dessert']}
+              category={missionStep as 'entrée' | 'plat' | 'dessert'}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Boutons d'action */}
+      {/* Boutons d'action - Sticky en bas du mode enfant */}
       <motion.div
-        className="mt-6 flex justify-center gap-3"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        className="sticky bottom-0 bg-white/95 backdrop-blur-sm border-t-2 border-purple-200 py-2 px-4 flex justify-center gap-3 shadow-[0_-4px_12px_rgba(0,0,0,0.1)] mt-auto"
+        initial={{ opacity: 0, y: 100 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
         {/* Bouton retour arrière */}
@@ -959,6 +1023,32 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
           Recommencer 🔄
         </Button>
       </motion.div>
+
+      {/* Dialogue de confirmation */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la commande 🎉</DialogTitle>
+            <DialogDescription>
+              Es-tu sûr(e) de vouloir valider ta commande et retourner au menu ?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Non, pas encore
+            </Button>
+            <Button
+              className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600"
+              onClick={handleFinalValidation}
+            >
+              Oui, valider ! 🏠
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -974,7 +1064,7 @@ function PlateDisplay({ plate, currentCategory, deviceType }: PlateDisplayProps)
   const currentDish = plate[currentCategory];
 
   return (
-    <div className="flex justify-center mb-6">
+    <div className={deviceType === 'tablet' ? 'flex justify-center mb-6' : 'flex justify-center mb-4'}>
       <motion.div
         className="relative"
         initial={{ scale: 0 }}
@@ -983,8 +1073,8 @@ function PlateDisplay({ plate, currentCategory, deviceType }: PlateDisplayProps)
       >
         {/* Assiette */}
         <div className={`${
-          deviceType === 'tablet' ? 'w-48 h-48' : 'w-32 h-32'
-        } rounded-full bg-gradient-to-br from-white to-neutral-100 border-8 border-neutral-300 shadow-2xl flex items-center justify-center relative overflow-hidden`}>
+          deviceType === 'tablet' ? 'w-28 h-28 border-8' : 'w-24 h-24 border-6'
+        } rounded-full bg-gradient-to-br from-white to-neutral-100 border-neutral-300 shadow-2xl flex items-center justify-center relative overflow-hidden`}>
           {currentDish ? (
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
@@ -1001,7 +1091,7 @@ function PlateDisplay({ plate, currentCategory, deviceType }: PlateDisplayProps)
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="text-6xl opacity-20"
+              className={deviceType === 'tablet' ? 'text-4xl opacity-20' : 'text-5xl opacity-20'}
             >
               🍽️
             </motion.div>
@@ -1009,7 +1099,7 @@ function PlateDisplay({ plate, currentCategory, deviceType }: PlateDisplayProps)
         </div>
 
         {/* Badge catégorie */}
-        <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 text-white px-4 py-1 rounded-full text-sm shadow-lg whitespace-nowrap">
+        <div className={`absolute -top-2 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-pink-500 text-white ${deviceType === 'tablet' ? 'px-4 py-1 text-sm' : 'px-3 py-0.5 text-xs'} rounded-full shadow-lg whitespace-nowrap`}>
           {currentCategory === 'entrée' ? '🥗 Entrée' : currentCategory === 'plat' ? '🍽️ Plat' : '🍰 Dessert'}
         </div>
       </motion.div>
@@ -1024,11 +1114,14 @@ interface DishFlipCardProps {
   isFlipped: boolean;
   onFlip: () => void;
   onSelect: () => void;
-  encouragement: string;
   stars: number;
+  category: 'entrée' | 'plat' | 'dessert';
 }
 
-function DishFlipCard({ dish, index, isFlipped, onFlip, onSelect, stars }: DishFlipCardProps) {
+function DishFlipCard({ dish, index, isFlipped, onFlip, onSelect, stars, category }: DishFlipCardProps) {
+  const childPrice = getChildPrice(dish, category);
+  const discount = Math.round((1 - CHILD_PRICE_MULTIPLIER[category]) * 100);
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
@@ -1079,7 +1172,10 @@ function DishFlipCard({ dish, index, isFlipped, onFlip, onSelect, stars }: DishF
           </div>
           <div>
             <div className="flex justify-between items-center mb-2">
-              <span className="text-2xl text-orange-600">{dish.price.toFixed(2)}€</span>
+              <div className="flex flex-col">
+                <span className="text-2xl text-orange-600">{childPrice.toFixed(2)}€</span>
+                <span className="text-xs text-green-600">-{discount}% portion enfant</span>
+              </div>
               <span className="bg-yellow-400 text-yellow-900 text-xs px-2 py-1 rounded-full">
                 +{stars} ⭐
               </span>

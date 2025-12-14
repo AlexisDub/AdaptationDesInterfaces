@@ -1,5 +1,14 @@
 import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft, ChefHat } from 'lucide-react';
 import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
+import { useState } from 'react';
 import type { CartItem } from './CartSidebar';
 
 interface CartPageProps {
@@ -11,8 +20,14 @@ interface CartPageProps {
 }
 
 export function CartPage({ items, onUpdateQuantity, onRemoveItem, onBack, onCheckout }: CartPageProps) {
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + (item.dish.price * item.quantity), 0);
+
+  const handleConfirmOrder = () => {
+    setShowConfirmDialog(false);
+    onCheckout();
+  };
 
   return (
     <div className="h-full bg-gradient-to-br from-orange-50 to-white flex flex-col">
@@ -166,13 +181,37 @@ export function CartPage({ items, onUpdateQuantity, onRemoveItem, onBack, onChec
           <Button
             className="w-full bg-orange-600 hover:bg-orange-700 h-12"
             size="lg"
-            onClick={onCheckout}
+            onClick={() => setShowConfirmDialog(true)}
           >
             <ChefHat className="w-5 h-5 mr-2" />
             Valider la commande
           </Button>
         </div>
       )}
+
+      {/* Confirm Order Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmer la commande</DialogTitle>
+            <DialogDescription>
+              Voulez-vous vraiment passer cette commande ?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Annuler
+            </Button>
+            <Button type="button" onClick={handleConfirmOrder}>
+              Confirmer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 /**
  * RUSH SERVICE - Gestion du mode Rush basé sur les commandes en cours
  * 
- * Ce service simule les appels API pour vérifier l'état du mode Rush.
- * Dans un backend réel, remplacer simulateGetOrdersInProgress() par un vrai fetch().
+ * Ce service simule le mode Rush en accumulant les temps de préparation des commandes.
+ * Quand le temps cumulé dépasse un seuil, le mode Rush s'active.
  */
 
 export interface RushStatus {
@@ -10,13 +10,14 @@ export interface RushStatus {
   isRushMode: boolean;
   threshold: number;
   lastUpdate: Date;
+  totalPrepTimeMinutes?: number; // Temps cumulé de préparation
 }
 
 /**
- * Seuil de déclenchement du mode Rush
- * Si ordersInProgress > RUSH_THRESHOLD, le mode Rush s'active
+ * Seuil de déclenchement du mode Rush en minutes de préparation cumulée
+ * Si totalPrepTime > RUSH_TIME_THRESHOLD, le mode Rush s'active
  */
-export const RUSH_THRESHOLD = 10;
+export const RUSH_TIME_THRESHOLD = 100; // 100 minutes de temps de préparation cumulé
 
 /**
  * Intervalle de rafraîchissement en millisecondes (10 secondes)
@@ -24,30 +25,47 @@ export const RUSH_THRESHOLD = 10;
 export const RUSH_CHECK_INTERVAL = 10000;
 
 /**
+ * Variable locale pour simuler le temps de préparation cumulé
+ */
+let cumulativePrepTime = 0;
+
+/**
+ * Ajoute du temps de préparation au compteur cumulé
+ * @param minutes - Minutes de préparation à ajouter
+ */
+export function addPrepTime(minutes: number): void {
+  cumulativePrepTime += minutes;
+  console.log(`[Rush Simulation] +${minutes} min ajoutées. Total cumulé: ${cumulativePrepTime} min`);
+}
+
+/**
+ * Réinitialise le temps de préparation cumulé
+ */
+export function resetPrepTime(): void {
+  cumulativePrepTime = 0;
+  console.log('[Rush Simulation] Temps cumulé réinitialisé');
+}
+
+/**
+ * Récupère le temps de préparation cumulé actuel
+ */
+export function getCurrentPrepTime(): number {
+  return cumulativePrepTime;
+}
+
+/**
  * SIMULATION - Récupère le nombre de commandes en cours
- * 
- * ⚠️ POUR LE MOMENT: Retourne toujours 15 pour tester le mode Rush
- * 
- * Dans un vrai backend, remplacer par:
- * ```typescript
- * const response = await fetch('/api/rush-status');
- * const data = await response.json();
- * return data.ordersInProgress;
- * ```
+ * Basé sur le temps de préparation cumulé
  */
 export async function simulateGetOrdersInProgress(): Promise<number> {
   // Simuler un délai réseau
   await new Promise(resolve => setTimeout(resolve, 100));
   
-  // ⚠️ SIMULATION: Retourne toujours 15 commandes (> 10 donc Rush activé)
-  // TODO: Remplacer par un vrai appel API
-  return 15;
+  // Convertir le temps cumulé en "nombre de commandes" simulé
+  // (environ 1 commande = 20 minutes de préparation moyenne)
+  const simulatedOrders = Math.floor(cumulativePrepTime / 20);
   
-  // Pour tester le mode normal (désactivé), décommenter la ligne suivante :
-  // return 5;
-  
-  // Pour simuler des variations aléatoires, décommenter :
-  // return Math.floor(Math.random() * 20);
+  return simulatedOrders;
 }
 
 /**
@@ -60,38 +78,9 @@ export async function getRushStatus(): Promise<RushStatus> {
   
   return {
     ordersInProgress,
-    isRushMode: ordersInProgress > RUSH_THRESHOLD,
-    threshold: RUSH_THRESHOLD,
+    isRushMode: cumulativePrepTime > RUSH_TIME_THRESHOLD,
+    threshold: RUSH_TIME_THRESHOLD,
+    totalPrepTimeMinutes: cumulativePrepTime,
     lastUpdate: new Date()
   };
 }
-
-/**
- * Version réelle pour migration API:
- * 
- * export async function getRushStatus(): Promise<RushStatus> {
- *   try {
- *     const response = await fetch('/api/rush-status');
- *     if (!response.ok) {
- *       throw new Error('Failed to fetch rush status');
- *     }
- *     const data = await response.json();
- *     
- *     return {
- *       ordersInProgress: data.ordersInProgress,
- *       isRushMode: data.ordersInProgress > RUSH_THRESHOLD,
- *       threshold: RUSH_THRESHOLD,
- *       lastUpdate: new Date()
- *     };
- *   } catch (error) {
- *     console.error('Error fetching rush status:', error);
- *     // Fallback: mode normal en cas d'erreur
- *     return {
- *       ordersInProgress: 0,
- *       isRushMode: false,
- *       threshold: RUSH_THRESHOLD,
- *       lastUpdate: new Date()
- *     };
- *   }
- * }
- */

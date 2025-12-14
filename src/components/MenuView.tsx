@@ -86,7 +86,7 @@ export function MenuView({
     if (selectedDish && modalOpenTime) {
       const timer = setTimeout(() => {
         setShowModalSuggestions(true);
-      }, 10000); // 10 seconds
+      }, 6000); // 6 seconds - Reduced from 10
 
       return () => clearTimeout(timer);
     } else {
@@ -112,11 +112,15 @@ export function MenuView({
   };
 
   return (
-    <div className="p-4">
+    <div className={deviceType === 'smartphone' ? 'p-2' : 'p-4'}>
       {/* Sticky Filters Section */}
-      <div className="sticky top-0 z-20 bg-gradient-to-br from-orange-50 to-white pb-4 -mx-4 px-4 -mt-4 pt-4">
+      <div className={`sticky top-0 z-20 bg-gradient-to-br from-orange-50 to-white ${
+        deviceType === 'smartphone' 
+          ? '-mx-2 px-2 -mt-2 pt-2 pb-1' 
+          : '-mx-4 px-4 -mt-4 pt-4 pb-4'
+      }`}>
         {/* Ingredient Search Bar */}
-        <div className="mb-3">
+        <div className={deviceType === 'smartphone' ? 'mb-2' : 'mb-3'}>
           <IngredientSearchBar 
             onFiltersChange={setIngredientFilters}
             deviceType={deviceType}
@@ -124,7 +128,7 @@ export function MenuView({
         </div>
 
         {/* Category Filter + Advanced Filters Toggle - Single Line */}
-        <div className="flex gap-1.5 mb-3 overflow-x-auto pb-2">
+        <div className={`flex gap-1.5 overflow-x-auto pb-2 ${deviceType === 'smartphone' ? 'mb-2' : 'mb-3'}`}>
           {['all', 'entrée', 'plat', 'dessert'].map((cat) => (
             <button
               key={cat}
@@ -218,8 +222,9 @@ export function MenuView({
 
       {/* Dishes Grid */}
       <div className={`
-        grid gap-3 mt-4
-        ${deviceType === 'tablet' ? 'grid-cols-3 lg:grid-cols-4' : 'grid-cols-2'}\n      `}>
+        grid
+        ${deviceType === 'tablet' ? 'grid-cols-4 gap-3 mt-4' : 'grid-cols-3 gap-2 mt-1'}
+      `}>
         {filteredDishes.map((dish) => {
           const quantity = getItemQuantity ? getItemQuantity(dish.id) : 0;
           

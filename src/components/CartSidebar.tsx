@@ -1,5 +1,14 @@
 import { ShoppingCart, Plus, Minus, Trash2, Users } from 'lucide-react';
 import { Button } from './ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog';
+import { useState } from 'react';
 import type { Dish } from '../data/dishes';
 
 export interface CartItem {
@@ -15,11 +24,19 @@ interface CartSidebarProps {
 }
 
 export function CartSidebar({ items, onUpdateQuantity, onRemoveItem, onValidateOrder }: CartSidebarProps) {
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + (item.dish.price * item.quantity), 0);
 
+  const handleConfirmOrder = () => {
+    setShowConfirmDialog(false);
+    if (onValidateOrder) {
+      onValidateOrder();
+    }
+  };
+
   return (
-    <div className="w-96 bg-white border-l border-neutral-200 flex flex-col h-full">
+    <div className="w-80 bg-white border-l border-neutral-200 flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-neutral-200 bg-gradient-to-r from-orange-50 to-orange-100">
         <div className="flex items-center gap-2 mb-2">
@@ -147,12 +164,40 @@ export function CartSidebar({ items, onUpdateQuantity, onRemoveItem, onValidateO
           <Button
             className="w-full bg-orange-600 hover:bg-orange-700"
             size="lg"
-            onClick={onValidateOrder}
+            onClick={() => setShowConfirmDialog(true)}
           >
             Valider la commande
           </Button>
         </div>
       )}
+
+      {/* Confirm Order Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirmer la commande</DialogTitle>
+            <DialogDescription>
+              Voulez-vous vraiment valider cette commande ?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowConfirmDialog(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              className="bg-orange-600 hover:bg-orange-700"
+              onClick={handleConfirmOrder}
+            >
+              Valider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

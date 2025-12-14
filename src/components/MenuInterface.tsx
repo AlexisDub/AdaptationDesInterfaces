@@ -9,18 +9,19 @@ import { Button } from './ui/button';
 import { Clock, ArrowLeft, ShoppingCart } from 'lucide-react';
 import { dishes, type Dish } from '../data/dishes';
 import type { UserMode } from '../App';
+import { addPrepTime } from '../data/rushService';
 
 interface MenuInterfaceProps {
   deviceType: 'tablet' | 'smartphone';
   isRushHour: boolean;
   userMode: UserMode;
+  tableNumber: number;
   onResetMode: () => void;
-  tableNumber: string;
 }
 
 export type ViewMode = 'normal' | 'rush' | 'child' | 'cart' | 'order-confirmation';
 
-export function MenuInterface({ deviceType, isRushHour, userMode, onResetMode, tableNumber }: MenuInterfaceProps) {
+export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, onResetMode }: MenuInterfaceProps) {
   const [viewMode, setViewMode] = useState<ViewMode>(userMode === 'child' ? 'child' : 'normal');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showRushBanner, setShowRushBanner] = useState(true);
@@ -75,6 +76,51 @@ export function MenuInterface({ deviceType, isRushHour, userMode, onResetMode, t
   };
 
   const handleValidateOrder = () => {
+    // Calculer le temps total de préparation de la commande
+    const totalPrepTime = cart.reduce((sum, item) => {
+      const itemTime = item.dish.prepTime * item.quantity;
+      console.log(`[Validation] ${item.dish.name} x${item.quantity}: ${item.dish.prepTime}min x ${item.quantity} = ${itemTime}min`);
+      return sum + itemTime;
+    }, 0);
+    
+    console.log(`[Validation] Temps total de cette commande: ${totalPrepTime}min`);
+    
+    // Calculer le prix total et préparer les données de commande
+    const totalPrice = cart.reduce((sum, item) => sum + (item.dish.price * item.quantity), 0);
+    
+    // Préparer les données de commande au format backend
+    const orderData = {
+      orderId: `ORDER-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      tableNumber: tableNumber, // Numéro de table
+      deviceType: deviceType,
+      userMode: userMode || 'normal',
+      items: cart.map(item => ({
+        dishId: item.dish.id,
+        quantity: item.quantity,
+        price: item.dish.price,
+        isReward: item.dish.id.startsWith('reward-')
+      })),
+      totalPrice: totalPrice,
+      totalItems: totalItems,
+      estimatedPrepTime: totalPrepTime
+    };
+    
+    // Log pour debug - À envoyer au backend via POST /api/orders
+    console.log('[Validation] Données de commande à envoyer au backend:', JSON.stringify(orderData, null, 2));
+    
+    // TODO: Remplacer par un vrai appel API
+    // fetch('/api/orders', {
+    //   method: 'POST',
+    //   headers: { 'Content-Type': 'application/json' },
+    //   body: JSON.stringify(orderData)
+    // });
+    
+    // Ajouter ce temps au compteur cumulé pour la simulation du mode Rush
+    if (totalPrepTime > 0) {
+      addPrepTime(totalPrepTime);
+    }
+    
     setViewMode('order-confirmation');
   };
 
@@ -99,7 +145,6 @@ export function MenuInterface({ deviceType, isRushHour, userMode, onResetMode, t
             </Button>
             <div>
               <h2 className="text-orange-900">Restaurant Le Gourmet</h2>
-              <p className="text-xs text-neutral-600">Table {tableNumber}</p>
             </div>
           </div>
           
@@ -236,8 +281,6 @@ export function MenuInterface({ deviceType, isRushHour, userMode, onResetMode, t
             <OrderConfirmation
               onReset={handleBackToMenu}
               deviceType={deviceType}
-              tableNumber={tableNumber}
-              cart={cart}
             />
           )}
         </div>

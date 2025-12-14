@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { dishes, type Dish } from '../data/dishes';
 import { Button } from './ui/button';
-import { Clock, Zap, Coffee, Utensils, Sparkles, TrendingUp, Timer, Leaf, Pizza, ChevronRight, ChevronDown, ChevronUp, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import { Clock, Zap, Coffee, Utensils, Sparkles, TrendingUp, Timer, Leaf, Pizza, ChevronRight, ChevronDown, ChevronUp, SlidersHorizontal, ArrowLeft, X } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { IngredientSearchBar, type IngredientFilters } from './IngredientSearchBar';
 import { AdvancedFilters, type AdvancedFilterOptions, applyAdvancedFilters } from './AdvancedFilters';
@@ -39,6 +39,7 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
   });
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'entrée' | 'plat' | 'dessert'>('all');
+  const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
 
   if (!timePreference) {
     return (
@@ -204,36 +205,26 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
     setViewMode('suggestions');
   };
 
-  return (
-    <div className="p-4">
-      {/* En-tête avec indicateur de temps */}
-      <div className="mb-4 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-white/20 p-2 rounded-full">
-              <Timer className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="text-sm opacity-90">Mode Rush activé</div>
-              <div className="font-medium">
-                {timePreference === '30min' ? 'Plats sous 30 minutes' : 'Plats sous 1 heure'}
-              </div>
-            </div>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setTimePreference(null)}
-            className="bg-white/10 border-white/30 text-white hover:bg-white/20 text-xs"
-          >
-            Modifier
-          </Button>
-        </div>
-      </div>
+  const handleDishClick = (dish: Dish) => {
+    setSelectedDish(dish);
+  };
 
+  const handleCloseModal = () => {
+    setSelectedDish(null);
+  };
+
+  const handleAddToCartFromModal = (dish: Dish) => {
+    onAddToCart(dish);
+    handleCloseModal();
+  };
+
+  return (
+    <div className={deviceType === 'smartphone' ? 'p-2' : 'p-4'}>
+      {/* En-tête avec indicateur de temps - SUPPRIMÉ POUR GAGNER DE LA PLACE */}
+      
       {/* Toggle View Mode - Seulement si pas en mode category-detail */}
       {viewMode !== 'category-detail' && (
-        <div className="flex gap-2 mb-4">
+        <div className={`flex gap-2 ${deviceType === 'smartphone' ? 'mb-2' : 'mb-4'}`}>
           <button
             onClick={() => setViewMode('suggestions')}
             className={`flex-1 py-2 px-3 rounded-lg text-sm transition-all ${
@@ -343,7 +334,7 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
           })()}
 
           {/* Grille de plats */}
-          <div className={`grid gap-3 ${deviceType === 'tablet' ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <div className={`grid ${deviceType === 'tablet' ? 'grid-cols-4 gap-3' : 'grid-cols-3 gap-2'}`}>
             {categoriesWithDishes
               .find(c => c.id === selectedRushCategory)
               ?.dishes.map(dish => (
@@ -351,8 +342,8 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
                   key={dish.id}
                   dish={dish}
                   onAddToCart={onAddToCart}
+                  onDishClick={handleDishClick}
                   deviceType={deviceType}
-                  showPopularity={selectedRushCategory === 'popular-fast'}
                   getItemQuantity={getItemQuantity}
                 />
               ))}
@@ -364,9 +355,13 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
       {viewMode === 'all-dishes' && (
         <div>
           {/* Sticky Filters Section */}
-          <div className="sticky top-0 z-20 bg-gradient-to-br from-orange-50 to-white pb-4 -mx-4 px-4 -mt-4 pt-4">
+          <div className={`sticky top-0 z-20 bg-gradient-to-br from-orange-50 to-white ${
+            deviceType === 'smartphone' 
+              ? '-mx-2 px-2 -mt-2 pt-2 pb-1' 
+              : '-mx-4 px-4 -mt-4 pt-4 pb-4'
+          }`}>
             {/* Ingredient Search Bar */}
-            <div className="mb-3">
+            <div className={deviceType === 'smartphone' ? 'mb-2' : 'mb-3'}>
               <IngredientSearchBar 
                 onFiltersChange={setIngredientFilters}
                 deviceType={deviceType}
@@ -374,7 +369,7 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
             </div>
 
             {/* Category Filter + Advanced Filters Toggle - Single Line */}
-            <div className="flex gap-1.5 mb-3 overflow-x-auto pb-2">
+            <div className={`flex gap-1.5 overflow-x-auto pb-2 ${deviceType === 'smartphone' ? 'mb-2' : 'mb-3'}`}>
               {['all', 'entrée', 'plat', 'dessert'].map((cat) => (
                 <button
                   key={cat}
@@ -456,12 +451,13 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
 
           {/* Liste des plats */}
           {filteredDishes.length > 0 ? (
-            <div className={`grid gap-3 ${deviceType === 'tablet' ? 'grid-cols-4' : 'grid-cols-2'}`}>
+            <div className={`grid ${deviceType === 'tablet' ? 'grid-cols-4 gap-3 mt-4' : 'grid-cols-3 gap-2 mt-1'}`}>
               {filteredDishes.map(dish => (
                 <DishQuickCard
                   key={dish.id}
                   dish={dish}
                   onAddToCart={onAddToCart}
+                  onDishClick={handleDishClick}
                   deviceType={deviceType}
                   getItemQuantity={getItemQuantity}
                 />
@@ -475,6 +471,86 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
           )}
         </div>
       )}
+
+      {/* Dish Detail Modal */}
+      {selectedDish && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          onClick={handleCloseModal}
+        >
+          <div
+            className={`bg-white rounded-2xl overflow-hidden flex flex-col ${
+              deviceType === 'tablet' ? 'max-w-2xl w-full max-h-[90vh]' : 'max-w-md w-full max-h-[90vh]'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button - Fixed */}
+            <button
+              onClick={handleCloseModal}
+              className="absolute top-3 right-3 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors z-10"
+            >
+              <X className="w-5 h-5 text-neutral-900" />
+            </button>
+
+            {/* Modal Content - Scrollable (including image) */}
+            <div className="flex-1 overflow-y-auto">
+              {/* Modal Header with Image */}
+              <div className="relative">
+                <ImageWithFallback
+                  src={selectedDish.imageUrl}
+                  alt={selectedDish.name}
+                  className="w-full aspect-video object-cover"
+                />
+                {/* Badge temps de préparation */}
+                <div className="absolute top-3 left-3 bg-orange-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {selectedDish.prepTime} min
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <h2 className="text-neutral-900">{selectedDish.name}</h2>
+                  <span className="text-orange-600 text-xl ml-3">{selectedDish.price.toFixed(2)}€</span>
+                </div>
+
+                {/* Ingredients */}
+                <div className="bg-neutral-50 rounded-lg p-4 mb-4">
+                  <h3 className="text-neutral-900 mb-2">Ingrédients</h3>
+                  <p className="text-neutral-700">{selectedDish.description}</p>
+                </div>
+
+                {/* Additional info */}
+                {selectedDish.isLight && (
+                  <div className="flex items-center gap-2 text-green-600 mb-2">
+                    <Leaf className="w-4 h-4" />
+                    <span className="text-sm">Plat léger</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Actions - Fixed at bottom */}
+            <div className="flex-shrink-0 p-6 pt-0 bg-white border-t border-neutral-200">
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleCloseModal}
+                >
+                  Retour
+                </Button>
+                <Button
+                  className="flex-1 bg-orange-600 hover:bg-orange-700"
+                  onClick={() => handleAddToCartFromModal(selectedDish)}
+                >
+                  Ajouter au panier
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -483,50 +559,51 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
 interface DishQuickCardProps {
   dish: Dish;
   onAddToCart: (dish: Dish) => void;
+  onDishClick: (dish: Dish) => void;
   deviceType: 'tablet' | 'smartphone';
-  showPopularity?: boolean;
   getItemQuantity?: (dishId: string) => number;
 }
 
-function DishQuickCard({ dish, onAddToCart, deviceType, showPopularity, getItemQuantity }: DishQuickCardProps) {
+function DishQuickCard({ dish, onAddToCart, onDishClick, deviceType, getItemQuantity }: DishQuickCardProps) {
   const quantity = getItemQuantity?.(dish.id) || 0;
+  const isSmartphone = deviceType === 'smartphone';
   
   return (
     <div className="bg-white rounded-xl border-2 border-neutral-200 hover:border-orange-400 transition-all overflow-hidden group">
-      <div className="relative">
+      <div 
+        className="relative cursor-pointer" 
+        onClick={() => onDishClick(dish)}
+      >
         <ImageWithFallback
           src={dish.imageUrl}
           alt={dish.name}
           className="w-full aspect-square object-cover"
         />
         {/* Badge temps de préparation */}
-        <div className="absolute top-2 right-2 bg-orange-600 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 shadow-md">
-          <Clock className="w-3 h-3" />
-          {dish.prepTime} min
+        <div className={`absolute top-2 right-2 bg-orange-600 text-white rounded-full flex items-center gap-1 shadow-md ${isSmartphone ? 'px-1.5 py-0.5 text-xs' : 'px-2 py-1 text-xs'}`}>
+          <Clock className={`${isSmartphone ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} />
+          {dish.prepTime}
         </div>
-        {showPopularity && (
-          <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 shadow-md">
-            <TrendingUp className="w-3 h-3" />
-            Top
-          </div>
-        )}
         {dish.isLight && (
-          <div className="absolute bottom-2 left-2 bg-green-600 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1 shadow-md">
-            <Leaf className="w-3 h-3" />
+          <div className={`absolute bottom-2 left-2 bg-green-600 text-white rounded-full flex items-center gap-1 shadow-md ${isSmartphone ? 'p-1' : 'px-2 py-1'}`}>
+            <Leaf className={`${isSmartphone ? 'w-2.5 h-2.5' : 'w-3 h-3'}`} />
           </div>
         )}
       </div>
       
-      <div className="p-3">
-        <div className="mb-2">
-          <div className="text-neutral-900 text-sm line-clamp-1 mb-1">{dish.name}</div>
-          <div className="text-orange-600 font-medium">{dish.price.toFixed(2)}€</div>
+      <div className={isSmartphone ? 'p-2' : 'p-3'}>
+        <div className={isSmartphone ? 'mb-1' : 'mb-2'}>
+          <div className={`text-neutral-900 line-clamp-1 mb-1 ${isSmartphone ? 'text-xs leading-tight' : 'text-sm'}`}>{dish.name}</div>
+          <div className={`text-orange-600 ${isSmartphone ? 'text-xs' : 'font-medium'}`}>{dish.price.toFixed(2)}€</div>
         </div>
         
         <Button
           size="sm"
-          onClick={() => onAddToCart(dish)}
-          className="w-full bg-orange-600 hover:bg-orange-700 text-xs py-2"
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddToCart(dish);
+          }}
+          className={`w-full bg-orange-600 hover:bg-orange-700 ${isSmartphone ? 'text-xs py-1 h-6' : 'text-xs py-2'}`}
         >
           Ajouter
         </Button>

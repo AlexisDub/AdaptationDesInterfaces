@@ -2,7 +2,7 @@
 
 Application React de prise de commande pour restaurant avec adaptation automatique selon le contexte d'usage.
 
-## Déploiement sur Vercel
+## 🚀 Déploiement sur Vercel
 
 ### Prérequis
 - Un compte GitHub (gratuit)
