@@ -131,11 +131,6 @@ export default function App() {
             )}
           </div>
         </div>
-      )}        onResetMode={handleResetMode}
-              />
-            )}
-          </div>
-        </div>
       )}
     </div>
   );
