@@ -47,7 +47,7 @@ export function SuggestionsPanel({
       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
         <div className="flex items-center gap-2 mb-2 text-white">
           <TrendingUp className="w-4 h-4" />
-          <span className="text-sm">Plats les plus commandés</span>
+          <span className="text-sm">Plats suggérés</span>
         </div>
         <div className="space-y-2">
           {topDishes.map((dish) => (
