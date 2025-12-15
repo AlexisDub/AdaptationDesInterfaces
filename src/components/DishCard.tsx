@@ -45,7 +45,7 @@ export function DishCard({
 
   return (
     <div 
-      className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden hover:shadow-md transition-all cursor-pointer group relative flex flex-col h-full"
+      className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden hover:shadow-md transition-all cursor-pointer group relative"
       onClick={() => onClick?.(dish)}
     >
       {/* Quantity Badge - Top Right */}
@@ -71,7 +71,7 @@ export function DishCard({
       </div>
 
       {/* Content */}
-      <div className={`flex flex-col flex-grow ${deviceType === 'smartphone' ? 'p-2' : 'p-3'}`}>
+      <div className={deviceType === 'smartphone' ? 'p-2' : 'p-3'}>
         <div className={`flex items-start justify-between gap-2 ${deviceType === 'smartphone' ? 'mb-1' : 'mb-2'}`}>
           <h4 className={`text-neutral-900 line-clamp-2 flex-1 ${deviceType === 'smartphone' ? 'text-xs leading-tight' : ''}`}>{dish.name}</h4>
           <span className={`text-orange-600 whitespace-nowrap ${deviceType === 'smartphone' ? 'text-xs' : 'text-sm'}`}>{dish.price.toFixed(2)}€</span>
@@ -79,7 +79,7 @@ export function DishCard({
 
         {/* Tablet Mode: Quantity Controls */}
         {isTablet && (
-          <div className="mt-auto">
+          <div className="mt-2">
             {hasQuantity ? (
               <div className="flex items-center gap-1">
                 <Button
