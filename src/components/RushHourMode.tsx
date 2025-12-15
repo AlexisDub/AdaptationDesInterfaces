@@ -335,7 +335,7 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
             </div>
 
             {/* Grille ou liste de plats */}
-            <div className={displayMode === 'grid' ? `grid ${deviceType === 'tablet' ? 'grid-cols-4 gap-3' : 'grid-cols-3 gap-2'}` : 'space-y-1'}>
+            <div className={displayMode === 'grid' ? `grid auto-rows-fr ${deviceType === 'tablet' ? 'grid-cols-4 gap-3' : 'grid-cols-3 gap-2'}` : 'space-y-1'}>
               {categoryDishes.map(dish => {
                 const quantity = getItemQuantity ? getItemQuantity(dish.id) : 0;
                 
@@ -524,7 +524,7 @@ export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushH
 
           {/* Liste des plats */}
           {filteredDishes.length > 0 ? (
-            <div className={displayMode === 'grid' ? `grid ${deviceType === 'tablet' ? 'grid-cols-4 gap-3 mt-4' : 'grid-cols-3 gap-2 mt-1'}` : 'space-y-1 mt-1'}>
+            <div className={displayMode === 'grid' ? `grid auto-rows-fr ${deviceType === 'tablet' ? 'grid-cols-4 gap-3 mt-4' : 'grid-cols-3 gap-2 mt-1'}` : 'space-y-1 mt-1'}>
               {filteredDishes.map(dish => {
                 const quantity = getItemQuantity ? getItemQuantity(dish.id) : 0;
                 
