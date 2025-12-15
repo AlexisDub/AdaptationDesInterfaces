@@ -224,7 +224,7 @@ export function MenuView({
 
       {/* Dishes Grid */}
       <div className={displayMode === 'grid' ? `
-        grid auto-rows-fr
+        grid
         ${deviceType === 'tablet' ? 'grid-cols-4 gap-3 mt-4' : 'grid-cols-3 gap-2 mt-1'}
       ` : 'space-y-1 mt-1'}>
         {filteredDishes.map((dish) => {

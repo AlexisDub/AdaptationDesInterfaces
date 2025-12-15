@@ -916,7 +916,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
           )}
 
           {/* Grille de récompenses */}
-          <div className={`grid auto-rows-fr mt-6 ${deviceType === 'tablet' ? 'grid-cols-3 gap-4' : 'grid-cols-2 gap-3'}`}>
+          <div className={`grid mt-6 ${deviceType === 'tablet' ? 'grid-cols-3 gap-4' : 'grid-cols-2 gap-3'}`}>
             {rewards.map((reward, index) => {
               const canAfford = remainingStars >= reward.stars;
               return (
@@ -1078,7 +1078,7 @@ export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: Child
         />
 
         {/* Grille de cartes de plats */}
-        <div className={`grid auto-rows-fr mt-6 ${deviceType === 'tablet' ? 'grid-cols-3 gap-4' : 'grid-cols-2 gap-3'}`}>
+        <div className={`grid mt-6 ${deviceType === 'tablet' ? 'grid-cols-3 gap-4' : 'grid-cols-2 gap-3'}`}>
           {currentDishes.map((dish, index) => (
             <DishFlipCard
               key={dish.id}
