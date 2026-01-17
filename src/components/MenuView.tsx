@@ -16,12 +16,16 @@ interface MenuViewProps {
   onDishLeave: () => void;
   onAddToCart: (dish: Dish, quantity?: number) => void;
   getItemQuantity?: (dishId: string) => number;
+  size?: 'normal' | 'compact';
+  disableModal?: boolean;
 }
 
 export function MenuView({ 
   deviceType, 
   onAddToCart,
-  getItemQuantity
+  getItemQuantity,
+  size = 'normal',
+  disableModal = false
 }: MenuViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'entrée' | 'plat' | 'dessert'>('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -97,6 +101,10 @@ export function MenuView({
   }, [selectedDish, modalOpenTime]);
 
   const handleDishClick = (dish: Dish) => {
+    if (disableModal) {
+      onAddToCart(dish, 1);
+      return;
+    }
     setSelectedDish(dish);
     setModalOpenTime(Date.now());
     setShowModalSuggestions(false);
@@ -114,9 +122,10 @@ export function MenuView({
   };
 
   return (
-    <div className={deviceType === 'smartphone' ? 'p-2' : 'p-4'}>
+    <div className={size === 'compact' ? 'p-1' : deviceType === 'smartphone' ? 'p-2' : 'p-4'}>
       {/* Sticky Filters Section */}
       <div className={`sticky top-0 z-20 bg-gradient-to-br from-orange-50 to-white ${
+        size === 'compact' ? '-mx-1 px-1 -mt-1 pt-1 pb-0.5' :
         deviceType === 'smartphone' 
           ? '-mx-2 px-2 -mt-2 pt-2 pb-1' 
           : '-mx-4 px-4 -mt-4 pt-4 pb-4'
@@ -292,6 +301,7 @@ export function MenuView({
               showDescription={false}
               deviceType={deviceType}
               quantity={quantity}
+              size={size}
               onUpdateQuantity={(dishId, change) => {
                 const currentQuantity = getItemQuantity ? getItemQuantity(dishId) : 0;
                 const newQuantity = Math.max(0, currentQuantity + change);
@@ -319,7 +329,7 @@ export function MenuView({
       )}
 
       {/* Dish Detail Modal */}
-      {selectedDish && (
+      {selectedDish && !disableModal && (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
           onClick={handleCloseModal}
