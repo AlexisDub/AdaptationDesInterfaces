@@ -95,7 +95,7 @@ export function PersonalArea({
       {/* Contenu principal */}
       <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Menu */}
-        <div className="flex-1 overflow-y-auto min-w-0 relative">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden min-w-0 relative">
           {showConfirmation ? (
             <div className="absolute inset-0 z-20 flex items-center justify-center overflow-hidden bg-white p-[20%]">
               <div className="w-full h-full flex items-center justify-center" style={{transform: 'scale(0.45)', transformOrigin: 'center'}}>
@@ -135,7 +135,8 @@ export function PersonalArea({
               onAddToCart={handleDishClick} 
               getItemQuantity={getItemQuantity}
               dishes={dishes}
-              loading={dishesLoading} 
+              loading={dishesLoading}
+              size="compact"
             />
           )}
         </div>

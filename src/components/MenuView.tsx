@@ -223,6 +223,7 @@ export function MenuView({
               filters={advancedFilters}
               onFiltersChange={setAdvancedFilters}
               deviceType={deviceType}
+              compact={size === 'compact'}
             />
           </div>
         )}

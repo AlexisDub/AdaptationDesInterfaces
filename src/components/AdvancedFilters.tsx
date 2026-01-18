@@ -12,9 +12,10 @@ interface AdvancedFiltersProps {
   filters: AdvancedFilterOptions;
   onFiltersChange: (filters: AdvancedFilterOptions) => void;
   deviceType: 'tablet' | 'smartphone';
+  compact?: boolean;
 }
 
-export function AdvancedFilters({ filters, onFiltersChange, deviceType }: AdvancedFiltersProps) {
+export function AdvancedFilters({ filters, onFiltersChange, deviceType, compact = false }: AdvancedFiltersProps) {
   const hasActiveFilters = 
     filters.dietary.length > 0 || 
     filters.characteristics.length > 0 || 
@@ -46,7 +47,9 @@ export function AdvancedFilters({ filters, onFiltersChange, deviceType }: Advanc
   };
 
   return (
-    <div className="bg-white rounded-lg border border-neutral-200 p-3 space-y-3">
+    <div className={`bg-white rounded-lg border border-neutral-200 p-3 space-y-3 ${
+      compact ? 'max-h-[300px] overflow-y-auto' : ''
+    }`}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
