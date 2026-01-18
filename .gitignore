@@ -4,6 +4,9 @@ node_modules
 # Lock files
 package-lock.json
 
+# Dist
+dist
+
 # Environment variables
 .env
 .env.local
