@@ -29,22 +29,6 @@ export function DishCard({
   const isTablet = deviceType === 'tablet';
   const hasQuantity = quantity > 0;
 
-  const handleAddClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isTablet && onUpdateQuantity) {
-      onUpdateQuantity(dish.id, 1);
-    } else {
-      onAddToCart(dish);
-    }
-  };
-
-  const handleRemoveClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isTablet && onUpdateQuantity) {
-      onUpdateQuantity(dish.id, -1);
-    }
-  };
-
   return (
     <div 
       className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden hover:shadow-md transition-all cursor-pointer group relative"
@@ -58,7 +42,9 @@ export function DishCard({
       )}
 
       {/* Image */}
-      <div className={`relative overflow-hidden ${size === 'compact' ? 'aspect-square' : 'aspect-video'}`}>
+      <div 
+        className={`relative overflow-hidden ${size === 'compact' ? 'aspect-square' : 'aspect-video'}`}
+      >
         <ImageWithFallback
           src={dish.imageUrl}
           alt={dish.name}
@@ -78,43 +64,6 @@ export function DishCard({
           <h4 className={`text-neutral-900 line-clamp-1 flex-1 ${size === 'compact' ? 'text-[8px] leading-tight' : deviceType === 'smartphone' ? 'text-xs leading-tight' : ''}`}>{dish.name}</h4>
           <span className={`text-orange-600 whitespace-nowrap ${size === 'compact' ? 'text-[8px]' : deviceType === 'smartphone' ? 'text-xs' : 'text-sm'}`}>{dish.price.toFixed(2)}€</span>
         </div>
-
-        {/* Tablet Mode: Quantity Controls */}
-        {isTablet && (
-          <div className={size === 'compact' ? 'mt-0' : 'mt-2'}>
-            {hasQuantity ? (
-              <div className="flex items-center gap-0.5">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleRemoveClick}
-                  className={`flex-1 border-orange-300 text-orange-600 hover:bg-orange-50 ${size === 'compact' ? 'h-4 py-0 px-0' : 'h-8'}`}
-                >
-                  <Minus className={size === 'compact' ? 'w-2 h-2' : 'w-4 h-4'} />
-                </Button>
-                <div className={`flex-1 text-center bg-orange-50 border border-orange-200 rounded text-orange-600 ${size === 'compact' ? 'py-0 text-[8px] leading-none' : 'py-1.5 text-sm'}`}>
-                  {quantity}
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleAddClick}
-                  className={`flex-1 border-orange-300 text-orange-600 hover:bg-orange-50 ${size === 'compact' ? 'h-4 py-0 px-0' : 'h-8'}`}
-                >
-                  <Plus className={size === 'compact' ? 'w-2 h-2' : 'w-4 h-4'} />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                size="sm"
-                onClick={handleAddClick}
-                className={`w-full bg-orange-500 text-white hover:bg-orange-600 ${size === 'compact' ? 'h-4 py-0 px-0 text-[8px]' : 'h-8'}`}
-              >
-                <Plus className={size === 'compact' ? 'w-2 h-2' : 'w-4 h-4'} />
-              </Button>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

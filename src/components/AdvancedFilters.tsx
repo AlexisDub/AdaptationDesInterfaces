@@ -203,21 +203,23 @@ export function applyAdvancedFilters(dishes: Dish[], filters: AdvancedFilterOpti
     // Dietary filters (OR logic within dietary)
     if (filters.dietary.length > 0) {
       const matchesDietary = filters.dietary.some(diet => {
-        if (diet === 'vegetarian') return dish.isVegetarian;
-        if (diet === 'vegan') return dish.isVegan;
-        if (diet === 'glutenFree') return dish.isGlutenFree;
+        if (diet === 'vegetarian') return dish.isVegetarian === true;
+        if (diet === 'vegan') return dish.isVegan === true;
+        if (diet === 'glutenFree') return dish.isGlutenFree === true;
         return false;
       });
       if (!matchesDietary) return false;
     }
 
     // Characteristics (AND logic)
-    if (filters.characteristics.includes('light') && !dish.isLight) return false;
-    if (filters.characteristics.includes('local') && !dish.isLocal) return false;
-    if (filters.characteristics.includes('spicy') && (dish.spicyLevel || 0) === 0) return false;
+    if (filters.characteristics.includes('light') && dish.isLight !== true) return false;
+    if (filters.characteristics.includes('local') && dish.isLocal !== true) return false;
+    if (filters.characteristics.includes('spicy') && (!dish.spicyLevel || dish.spicyLevel === 0)) return false;
 
-    // Cuisine (OR logic)
-    if (filters.cuisine.length > 0 && !filters.cuisine.includes(dish.cuisine!)) return false;
+    // Cuisine (OR logic) - skip if dish has no cuisine property
+    if (filters.cuisine.length > 0) {
+      if (!dish.cuisine || !filters.cuisine.includes(dish.cuisine)) return false;
+    }
 
     return true;
   });

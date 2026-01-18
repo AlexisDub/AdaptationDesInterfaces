@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { dishes, type Dish } from '../data/dishes';
+import type { Dish } from '../data/dishes';
 import { DishCard } from './DishCard';
 import { SuggestionsPanel } from './SuggestionsPanel';
 import { IngredientSearchBar, type IngredientFilters } from './IngredientSearchBar';
@@ -18,6 +18,8 @@ interface MenuViewProps {
   getItemQuantity?: (dishId: string) => number;
   size?: 'normal' | 'compact';
   disableModal?: boolean;
+  dishes?: Dish[];
+  loading?: boolean;
 }
 
 export function MenuView({ 
@@ -25,7 +27,9 @@ export function MenuView({
   onAddToCart,
   getItemQuantity,
   size = 'normal',
-  disableModal = false
+  disableModal = false,
+  dishes = [],
+  loading = false
 }: MenuViewProps) {
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'entrée' | 'plat' | 'dessert'>('all');
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -41,8 +45,27 @@ export function MenuView({
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [displayMode, setDisplayMode] = useState<DisplayMode>('grid');
 
+  // Debug: log dishes on mount and changes
+  useEffect(() => {
+    console.log('[MenuView] Dishes reçus:', dishes.length, 'plats');
+    console.log('[MenuView] Loading:', loading);
+    if (dishes.length > 0) {
+      console.log('[MenuView] Premier plat:', dishes[0]);
+    }
+  }, [dishes, loading]);
+
   // Filter dishes by ingredients
   const ingredientFilteredDishes = dishes.filter(dish => {
+    // Skip ingredient filtering if dish has no ingredients data
+    if (!dish.ingredients || dish.ingredients.length === 0) {
+      // If no filters applied, include the dish
+      if (ingredientFilters.included.length === 0 && ingredientFilters.excluded.length === 0) {
+        return true;
+      }
+      // If filters applied but dish has no ingredients data, exclude it
+      return false;
+    }
+
     // Check if dish contains all included ingredients
     const hasAllIncluded = ingredientFilters.included.every(ingredient => 
       dish.ingredients.some(dishIngredient => 
@@ -78,8 +101,18 @@ export function MenuView({
     ? categoryFilteredDishes.filter(d => d.subcategory === selectedSubcategory)
     : categoryFilteredDishes;
 
-  const popularDishes = dishes.filter(d => d.popularity >= 4);
-  const specialOfDay = dishes.find(d => d.isSpecialOfDay);
+  const popularDishes = dishes.filter(d => d.popularity && d.popularity >= 4);
+  const specialOfDay = dishes.find(d => d.isSpecialOfDay === true);
+
+  // Debug: log filtering steps
+  useEffect(() => {
+    console.log('[MenuView] Filtrage:');
+    console.log('  - Dishes bruts:', dishes.length);
+    console.log('  - Après filtre ingrédients:', ingredientFilteredDishes.length);
+    console.log('  - Après filtres avancés:', advancedFilteredDishes.length);
+    console.log('  - Après filtre catégorie:', categoryFilteredDishes.length);
+    console.log('  - Après filtre sous-catégorie:', filteredDishes.length);
+  }, [dishes, ingredientFilteredDishes, advancedFilteredDishes, categoryFilteredDishes, filteredDishes]);
 
   // Reset subcategory when category changes
   const handleCategoryChange = (cat: 'all' | 'entrée' | 'plat' | 'dessert') => {

@@ -25,6 +25,8 @@ interface ChildModeProps {
   onAddToCart: (dish: Dish) => void;
   cart: Array<{ dish: Dish; quantity: number }>;
   onBackToMenu?: () => void;
+  dishes?: Dish[];
+  loading?: boolean;
 }
 
 type MissionStep = 'welcome' | 'entrée' | 'plat' | 'dessert' | 'complete' | 'cart' | 'rewards' | 'handoff';
@@ -69,7 +71,7 @@ const createChildPortion = (dish: Dish, category: 'entrée' | 'plat' | 'dessert'
   };
 };
 
-export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu }: ChildModeProps) {
+export function ChildMode({ deviceType, onAddToCart, cart, onBackToMenu, dishes = [], loading = false }: ChildModeProps) {
   const [missionStep, setMissionStep] = useState<MissionStep>('welcome');
   const [plate, setPlate] = useState<PlateState>({
     entrée: null,

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { dishes, type Dish } from '../data/dishes';
+import type { Dish } from '../data/dishes';
 import { Button } from './ui/button';
 import { Clock, Zap, Coffee, Utensils, Sparkles, TrendingUp, Timer, Leaf, Pizza, ChevronRight, ChevronDown, ChevronUp, SlidersHorizontal, ArrowLeft, X, Minus, Plus } from 'lucide-react';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -11,6 +11,8 @@ interface RushHourModeProps {
   deviceType: 'tablet' | 'smartphone';
   onAddToCart: (dish: Dish) => void;
   getItemQuantity?: (dishId: string) => number;
+  dishes?: Dish[];
+  loading?: boolean;
 }
 
 type TimePreference = '30min' | '1h' | null;
@@ -28,7 +30,7 @@ interface RushCategory {
   filterFn: (dishes: Dish[]) => Dish[];
 }
 
-export function RushHourMode({ deviceType, onAddToCart, getItemQuantity }: RushHourModeProps) {
+export function RushHourMode({ deviceType, onAddToCart, getItemQuantity, dishes = [], loading = false }: RushHourModeProps) {
   const [timePreference, setTimePreference] = useState<TimePreference>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('suggestions');
   const [selectedRushCategory, setSelectedRushCategory] = useState<string | null>(null);

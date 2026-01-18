@@ -9,6 +9,7 @@ import { Button } from './components/ui/button';
 import type { CartItem } from './components/CartSidebar';
 import type { Dish } from './data/dishes';
 import { getRushStatus, RUSH_CHECK_INTERVAL, getCurrentPrepTime, addPrepTime } from './data/rushService';
+import { loadDishes } from './services/dishService';
 
 export type UserMode = 'normal' | 'child' | null;
 
@@ -48,6 +49,10 @@ export default function App() {
   const [isRushMode, setIsRushMode] = useState(false);
   const [ordersInProgress, setOrdersInProgress] = useState(0);
   const [currentPrepTime, setCurrentPrepTime] = useState(0);
+  
+  // État pour les plats (chargés depuis le backend)
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [dishesLoading, setDishesLoading] = useState(true);
 
   // États pour la table tactile
   const [personalCarts, setPersonalCarts] = useState([
@@ -58,12 +63,36 @@ export default function App() {
   ]);
   const [sharedCart, setSharedCart] = useState<CartItem[]>([]);
   const [orderConfirmed, setOrderConfirmed] = useState(false);
+  const [playerConfirmations, setPlayerConfirmations] = useState<{[playerId: number]: boolean}>({
+    1: false,
+    2: false,
+    3: false,
+    4: false
+  });
   const [selectedDishes, setSelectedDishes] = useState<{[playerId: number]: Dish | null}>({
     1: null,
     2: null,
     3: null,
     4: null
   });
+
+  // Charger les plats depuis le backend au montage
+  useEffect(() => {
+    const loadDishesData = async () => {
+      try {
+        console.log('[App] Chargement des plats...');
+        setDishesLoading(true);
+        const loadedDishes = await loadDishes();
+        console.log('[App] Plats chargés:', loadedDishes.length, 'plats');
+        setDishes(loadedDishes);
+      } catch (error) {
+        console.error('[App] Erreur chargement plats:', error);
+      } finally {
+        setDishesLoading(false);
+      }
+    };
+    loadDishesData();
+  }, []);
 
   // Vérifier le statut Rush toutes les 10 secondes
   useEffect(() => {
@@ -169,8 +198,8 @@ export default function App() {
     const totalPrepTime = cart.items.reduce((sum, item) => sum + (item.dish.prepTime * item.quantity), 0);
     addPrepTime(totalPrepTime);
     setPersonalCarts(prev => prev.map(c => c.playerId === playerId ? { ...c, items: [] } : c));
-    setOrderConfirmed(true);
-    setTimeout(() => setOrderConfirmed(false), 3000);
+    setPlayerConfirmations(prev => ({ ...prev, [playerId]: true }));
+    setTimeout(() => setPlayerConfirmations(prev => ({ ...prev, [playerId]: false })), 3000);
   };
 
   const handleSharedPayment = () => {
@@ -194,12 +223,9 @@ export default function App() {
     <div className="min-h-screen bg-neutral-100">
       {/* Table Tactile - Mode par défaut */}
       {deviceType === 'table-tactile' ? (
-        orderConfirmed ? (
-          <OrderConfirmation onReset={() => setOrderConfirmed(false)} deviceType="tablet" />
-        ) : (
-          <div className="fixed inset-0 bg-neutral-200 flex items-center justify-center p-4 overflow-hidden">
-            <div className="bg-neutral-100 shadow-2xl rounded-2xl w-full h-full max-w-[1600px] max-h-[900px] flex flex-col overflow-hidden">
-              <div className="flex-1 flex flex-col p-2 gap-2 overflow-hidden">
+        <div className="fixed inset-0 bg-neutral-200 flex items-center justify-center p-4 overflow-hidden">
+          <div className="bg-neutral-100 shadow-2xl rounded-2xl w-full h-full max-w-[1600px] max-h-[900px] flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col p-2 gap-2 overflow-hidden">
                 
                 {/* LIGNE DU HAUT - 40% */}
                 <div className="flex gap-2 overflow-hidden" style={{height: '40%'}}>
@@ -220,7 +246,19 @@ export default function App() {
                           </div>
                           <div className="flex-1 flex overflow-hidden min-h-0">
                             <div className="flex-1 overflow-y-auto min-w-0 relative">
-                              {selectedDish ? (
+                              {playerConfirmations[playerId] ? (
+                                <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-green-100 z-20 flex flex-col items-center justify-center p-4">
+                                  <div className="bg-white rounded-xl shadow-lg p-6 text-center max-w-sm">
+                                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-green-700 mb-2">Commande validée !</h3>
+                                    <p className="text-sm text-neutral-600">Votre commande a été envoyée en cuisine</p>
+                                  </div>
+                                </div>
+                              ) : selectedDish ? (
                                 <div className="absolute inset-0 bg-white z-10 flex flex-col">
                                     <button onClick={() => handleCloseDishDetail(playerId)} className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 z-20">
                                       <X className="w-4 h-4 text-white" />
@@ -244,7 +282,9 @@ export default function App() {
                                 <MenuView deviceType="tablet" showSuggestions={false} onDishHover={() => {}} onDishLeave={() => {}} 
                                   disableModal={true}
                                   onAddToCart={(dish) => handleDishClick(playerId, dish)} 
-                                  getItemQuantity={(dishId) => cart.items.find(i => i.dish.id === dishId)?.quantity || 0} />
+                                  getItemQuantity={(dishId) => cart.items.find(i => i.dish.id === dishId)?.quantity || 0}
+                                  dishes={dishes}
+                                  loading={dishesLoading} />
                               )}
                             </div>
                             <div className={`w-2/5 border-l-2 ${borders[playerId-1]} bg-neutral-50 flex flex-col p-1.5 min-w-0`}>
@@ -281,77 +321,109 @@ export default function App() {
 
                 {/* PANIER COMMUN - 20% */}
                 <div className="flex gap-2 overflow-hidden" style={{height: '20%'}}>
-                  {/* PARTIE GAUCHE - Pour joueurs du haut (retournée) */}
-                  <div className="flex-1 bg-white rounded-xl border-4 border-orange-500 flex flex-col overflow-hidden" style={{transform: 'rotate(180deg)'}}>
-                    <div className="bg-orange-500 text-white p-1.5 text-center flex-shrink-0">
-                      <h2 className="text-sm font-bold">PANIER COMMUN</h2>
-                      <div className="text-[10px]">{sharedCart.reduce((s, i) => s + i.quantity, 0)} articles</div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
-                      {sharedCart.length === 0 ? (
-                        <div className="text-center py-2 text-neutral-400 text-xs">Panier vide</div>
-                      ) : (
-                        <div className="flex flex-wrap gap-1">
-                          {sharedCart.map(item => (
-                            <div key={item.dish.id} className="bg-orange-50 rounded p-1 border border-orange-200 flex-shrink-0">
-                              <div className="font-semibold text-[10px] truncate max-w-[120px] mb-0.5">{item.dish.name}</div>
-                              <div className="flex items-center gap-1">
-                                <button onClick={() => handleUpdateSharedQuantity(item.dish.id, item.quantity - 1)} 
-                                  className="w-4 h-4 bg-orange-200 rounded flex items-center justify-center"><Minus className="w-2 h-2" /></button>
-                                <span className="font-bold text-[10px] min-w-[12px] text-center">{item.quantity}</span>
-                                <button onClick={() => handleUpdateSharedQuantity(item.dish.id, item.quantity + 1)} 
-                                  className="w-4 h-4 bg-orange-200 rounded flex items-center justify-center"><Plus className="w-2 h-2" /></button>
-                                <span className="font-bold text-[10px] ml-1">{(item.dish.price * item.quantity).toFixed(2)}€</span>
-                              </div>
-                            </div>
-                          ))}
+                  {orderConfirmed ? (
+                    <>
+                      {/* CONFIRMATION GAUCHE - Pour joueurs du haut (retournée) */}
+                      <div className="flex-1 bg-green-600 rounded-xl flex items-center justify-center shadow-xl" style={{transform: 'rotate(180deg)'}}>
+                        <div className="text-center">
+                          <div className="mb-3">
+                            <svg className="w-20 h-20 mx-auto text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <h2 className="text-3xl font-black mb-2 text-white drop-shadow-md">COMMANDE VALIDÉE</h2>
+                          <p className="text-xl font-semibold text-green-50">Votre commande est en préparation</p>
                         </div>
-                      )}
-                    </div>
-                    <div className="border-t-4 border-orange-500 bg-white p-1.5 flex items-center justify-center gap-2 flex-shrink-0">
-                      <div className="text-sm font-bold text-orange-600">
-                        {sharedCart.reduce((s, i) => s + (i.dish.price * i.quantity), 0).toFixed(2)}€
                       </div>
-                      <Button onClick={handleSharedPayment} disabled={sharedCart.length === 0} 
-                        className="bg-green-600 text-white px-3 py-1 text-xs font-bold h-auto"><CreditCard className="w-3 h-3 mr-1" />PAYER</Button>
-                    </div>
-                  </div>
 
-                  {/* PARTIE DROITE - Pour joueurs du bas (normale) */}
-                  <div className="flex-1 bg-white rounded-xl border-4 border-orange-500 flex flex-col overflow-hidden">
-                    <div className="bg-orange-500 text-white p-1.5 text-center flex-shrink-0">
-                      <h2 className="text-sm font-bold">PANIER COMMUN</h2>
-                      <div className="text-[10px]">{sharedCart.reduce((s, i) => s + i.quantity, 0)} articles</div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
-                      {sharedCart.length === 0 ? (
-                        <div className="text-center py-2 text-neutral-400 text-xs">Panier vide</div>
-                      ) : (
-                        <div className="flex flex-wrap gap-1">
-                          {sharedCart.map(item => (
-                            <div key={item.dish.id} className="bg-orange-50 rounded p-1 border border-orange-200 flex-shrink-0">
-                              <div className="font-semibold text-[10px] truncate max-w-[120px] mb-0.5">{item.dish.name}</div>
-                              <div className="flex items-center gap-1">
-                                <button onClick={() => handleUpdateSharedQuantity(item.dish.id, item.quantity - 1)} 
-                                  className="w-4 h-4 bg-orange-200 rounded flex items-center justify-center"><Minus className="w-2 h-2" /></button>
-                                <span className="font-bold text-[10px] min-w-[12px] text-center">{item.quantity}</span>
-                                <button onClick={() => handleUpdateSharedQuantity(item.dish.id, item.quantity + 1)} 
-                                  className="w-4 h-4 bg-orange-200 rounded flex items-center justify-center"><Plus className="w-2 h-2" /></button>
-                                <span className="font-bold text-[10px] ml-1">{(item.dish.price * item.quantity).toFixed(2)}€</span>
-                              </div>
-                            </div>
-                          ))}
+                      {/* CONFIRMATION DROITE - Pour joueurs du bas (normale) */}
+                      <div className="flex-1 bg-green-600 rounded-xl flex items-center justify-center shadow-xl">
+                        <div className="text-center">
+                          <div className="mb-3">
+                            <svg className="w-20 h-20 mx-auto text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                          <h2 className="text-3xl font-black mb-2 text-white drop-shadow-md">COMMANDE VALIDÉE</h2>
+                          <p className="text-xl font-semibold text-green-50">Votre commande est en préparation</p>
                         </div>
-                      )}
-                    </div>
-                    <div className="border-t-4 border-orange-500 bg-white p-1.5 flex items-center justify-center gap-2 flex-shrink-0">
-                      <div className="text-sm font-bold text-orange-600">
-                        {sharedCart.reduce((s, i) => s + (i.dish.price * i.quantity), 0).toFixed(2)}€
                       </div>
-                      <Button onClick={handleSharedPayment} disabled={sharedCart.length === 0} 
-                        className="bg-green-600 text-white px-3 py-1 text-xs font-bold h-auto"><CreditCard className="w-3 h-3 mr-1" />PAYER</Button>
-                    </div>
-                  </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* PARTIE GAUCHE - Pour joueurs du haut (retournée) */}
+                      <div className="flex-1 bg-white rounded-xl border-4 border-orange-500 flex flex-col overflow-hidden" style={{transform: 'rotate(180deg)'}}>
+                        <div className="bg-orange-500 text-white p-1.5 text-center flex-shrink-0">
+                          <h2 className="text-sm font-bold">PANIER COMMUN</h2>
+                          <div className="text-[10px]">{sharedCart.reduce((s, i) => s + i.quantity, 0)} articles</div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
+                          {sharedCart.length === 0 ? (
+                            <div className="text-center py-2 text-neutral-400 text-xs">Panier vide</div>
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {sharedCart.map(item => (
+                                <div key={item.dish.id} className="bg-orange-50 rounded p-1 border border-orange-200 flex-shrink-0">
+                                  <div className="font-semibold text-[10px] truncate max-w-[120px] mb-0.5">{item.dish.name}</div>
+                                  <div className="flex items-center gap-1">
+                                    <button onClick={() => handleUpdateSharedQuantity(item.dish.id, item.quantity - 1)} 
+                                      className="w-4 h-4 bg-orange-200 rounded flex items-center justify-center"><Minus className="w-2 h-2" /></button>
+                                    <span className="font-bold text-[10px] min-w-[12px] text-center">{item.quantity}</span>
+                                    <button onClick={() => handleUpdateSharedQuantity(item.dish.id, item.quantity + 1)} 
+                                      className="w-4 h-4 bg-orange-200 rounded flex items-center justify-center"><Plus className="w-2 h-2" /></button>
+                                    <span className="font-bold text-[10px] ml-1">{(item.dish.price * item.quantity).toFixed(2)}€</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="border-t-4 border-orange-500 bg-white p-1.5 flex items-center justify-center gap-2 flex-shrink-0">
+                          <div className="text-sm font-bold text-orange-600">
+                            {sharedCart.reduce((s, i) => s + (i.dish.price * i.quantity), 0).toFixed(2)}€
+                          </div>
+                          <Button onClick={handleSharedPayment} disabled={sharedCart.length === 0} 
+                            className="bg-green-600 text-white px-3 py-1 text-xs font-bold h-auto"><CreditCard className="w-3 h-3 mr-1" />PAYER</Button>
+                        </div>
+                      </div>
+
+                      {/* PARTIE DROITE - Pour joueurs du bas (normale) */}
+                      <div className="flex-1 bg-white rounded-xl border-4 border-orange-500 flex flex-col overflow-hidden">
+                        <div className="bg-orange-500 text-white p-1.5 text-center flex-shrink-0">
+                          <h2 className="text-sm font-bold">PANIER COMMUN</h2>
+                          <div className="text-[10px]">{sharedCart.reduce((s, i) => s + i.quantity, 0)} articles</div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-1.5 min-h-0">
+                          {sharedCart.length === 0 ? (
+                            <div className="text-center py-2 text-neutral-400 text-xs">Panier vide</div>
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {sharedCart.map(item => (
+                                <div key={item.dish.id} className="bg-orange-50 rounded p-1 border border-orange-200 flex-shrink-0">
+                                  <div className="font-semibold text-[10px] truncate max-w-[120px] mb-0.5">{item.dish.name}</div>
+                                  <div className="flex items-center gap-1">
+                                    <button onClick={() => handleUpdateSharedQuantity(item.dish.id, item.quantity - 1)} 
+                                      className="w-4 h-4 bg-orange-200 rounded flex items-center justify-center"><Minus className="w-2 h-2" /></button>
+                                    <span className="font-bold text-[10px] min-w-[12px] text-center">{item.quantity}</span>
+                                    <button onClick={() => handleUpdateSharedQuantity(item.dish.id, item.quantity + 1)} 
+                                      className="w-4 h-4 bg-orange-200 rounded flex items-center justify-center"><Plus className="w-2 h-2" /></button>
+                                    <span className="font-bold text-[10px] ml-1">{(item.dish.price * item.quantity).toFixed(2)}€</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="border-t-4 border-orange-500 bg-white p-1.5 flex items-center justify-center gap-2 flex-shrink-0">
+                          <div className="text-sm font-bold text-orange-600">
+                            {sharedCart.reduce((s, i) => s + (i.dish.price * i.quantity), 0).toFixed(2)}€
+                          </div>
+                          <Button onClick={handleSharedPayment} disabled={sharedCart.length === 0} 
+                            className="bg-green-600 text-white px-3 py-1 text-xs font-bold h-auto"><CreditCard className="w-3 h-3 mr-1" />PAYER</Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* LIGNE DU BAS - 40% */}
@@ -373,7 +445,19 @@ export default function App() {
                           </div>
                           <div className="flex-1 flex overflow-hidden min-h-0">
                             <div className="flex-1 overflow-y-auto min-w-0 relative">
-                              {selectedDish ? (
+                              {playerConfirmations[playerId] ? (
+                                <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-green-100 z-20 flex flex-col items-center justify-center p-4">
+                                  <div className="bg-white rounded-xl shadow-lg p-6 text-center max-w-sm">
+                                    <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                    <h3 className="text-lg font-bold text-green-700 mb-2">Commande validée !</h3>
+                                    <p className="text-sm text-neutral-600">Votre commande a été envoyée en cuisine</p>
+                                  </div>
+                                </div>
+                              ) : selectedDish ? (
                                 <div className="absolute inset-0 bg-white z-10 flex flex-col">
                                   <button onClick={() => handleCloseDishDetail(playerId)} className="absolute top-2 right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 z-20">
                                     <X className="w-4 h-4 text-white" />
@@ -397,7 +481,9 @@ export default function App() {
                                 <MenuView deviceType="tablet" showSuggestions={false} onDishHover={() => {}} onDishLeave={() => {}} 
                                   disableModal={true}
                                   onAddToCart={(dish) => handleDishClick(playerId, dish)} 
-                                  getItemQuantity={(dishId) => cart.items.find(i => i.dish.id === dishId)?.quantity || 0} />
+                                  getItemQuantity={(dishId) => cart.items.find(i => i.dish.id === dishId)?.quantity || 0}
+                                  dishes={dishes}
+                                  loading={dishesLoading} />
                               )}
                             </div>
                             <div className={`w-2/5 border-l-2 ${borders[playerId-1]} bg-neutral-50 flex flex-col p-1.5 min-w-0`}>
@@ -434,7 +520,6 @@ export default function App() {
               </div>
             </div>
           </div>
-        )
       ) : (
         <>
           {/* Device Display pour Tablette et Smartphone */}

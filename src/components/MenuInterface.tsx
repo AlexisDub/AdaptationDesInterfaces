@@ -7,9 +7,10 @@ import { CartPage } from './CartPage';
 import { OrderConfirmation } from './OrderConfirmation';
 import { Button } from './ui/button';
 import { Clock, ArrowLeft, ShoppingCart } from 'lucide-react';
-import { dishes, type Dish } from '../data/dishes';
+import type { Dish } from '../data/dishes';
 import type { UserMode } from '../App';
 import { addPrepTime } from '../data/rushService';
+import { loadDishes } from '../services/dishService';
 
 interface MenuInterfaceProps {
   deviceType: 'tablet' | 'smartphone';
@@ -25,6 +26,30 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
   const [viewMode, setViewMode] = useState<ViewMode>(userMode === 'child' ? 'child' : 'normal');
   const [cart, setCart] = useState<CartItem[]>([]);
   const [showRushBanner, setShowRushBanner] = useState(true);
+  const [dishes, setDishes] = useState<Dish[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load dishes from backend on mount
+  useEffect(() => {
+    const loadDishesData = async () => {
+      try {
+        console.log('[MenuInterface] Début chargement des plats...');
+        setLoading(true);
+        const loadedDishes = await loadDishes();
+        console.log('[MenuInterface] Plats chargés:', loadedDishes.length, 'plats');
+        if (loadedDishes.length > 0) {
+          console.log('[MenuInterface] Premier plat:', loadedDishes[0]);
+        }
+        setDishes(loadedDishes);
+      } catch (error) {
+        console.error('[MenuInterface] Erreur chargement plats:', error);
+      } finally {
+        setLoading(false);
+        console.log('[MenuInterface] Fin chargement, loading=false');
+      }
+    };
+    loadDishesData();
+  }, []);
 
   // Update viewMode when userMode changes
   useEffect(() => {
@@ -256,6 +281,8 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
                 onDishLeave={() => {}}
                 onAddToCart={handleAddToCart}
                 getItemQuantity={getItemQuantity}
+                dishes={dishes}
+                loading={loading}
               />
             </>
           )}
@@ -264,6 +291,8 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
               deviceType={deviceType}
               onAddToCart={(dish) => handleAddToCart(dish, 1)}
               getItemQuantity={getItemQuantity}
+              dishes={dishes}
+              loading={loading}
             />
           )}
           {viewMode === 'child' && (
@@ -272,6 +301,8 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
               onAddToCart={(dish) => handleAddToCart(dish, 1)}
               cart={cart}
               onBackToMenu={() => setViewMode('normal')}
+              dishes={dishes}
+              loading={loading}
             />
           )}
           {viewMode === 'cart' && (
