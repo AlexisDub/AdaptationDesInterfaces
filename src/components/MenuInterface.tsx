@@ -11,6 +11,7 @@ import type { Dish } from '../data/dishes';
 import type { UserMode } from '../App';
 import { addPrepTime } from '../data/rushService';
 import { loadDishes } from '../services/dishService';
+import { submitOrderToBackend } from '../services/orderService';
 
 interface MenuInterfaceProps {
   deviceType: 'tablet' | 'smartphone';
@@ -100,7 +101,9 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
     setViewMode('rush');
   };
 
-  const handleValidateOrder = () => {
+  const handleValidateOrder = async () => {
+    console.log('[MenuInterface] handleValidateOrder appelé!', { cartLength: cart.length });
+    
     // Calculer le temps total de préparation de la commande
     const totalPrepTime = cart.reduce((sum, item) => {
       const itemTime = item.dish.prepTime * item.quantity;
@@ -134,12 +137,13 @@ export function MenuInterface({ deviceType, isRushHour, userMode, tableNumber, o
     // Log pour debug - À envoyer au backend via POST /api/orders
     console.log('[Validation] Données de commande à envoyer au backend:', JSON.stringify(orderData, null, 2));
     
-    // TODO: Remplacer par un vrai appel API
-    // fetch('/api/orders', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(orderData)
-    // });
+    // Soumettre la commande au backend
+    const result = await submitOrderToBackend(tableNumber, cart, 1);
+    if (result.success) {
+      console.log('✅ [MenuInterface] Commande envoyée au backend:', result.orderId);
+    } else {
+      console.error('❌ [MenuInterface] Erreur soumission:', result.error);
+    }
     
     // Ajouter ce temps au compteur cumulé pour la simulation du mode Rush
     if (totalPrepTime > 0) {

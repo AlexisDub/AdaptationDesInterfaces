@@ -10,6 +10,7 @@ import type { CartItem } from './components/CartSidebar';
 import type { Dish } from './data/dishes';
 import { getRushStatus, RUSH_CHECK_INTERVAL, getCurrentPrepTime, addPrepTime } from './data/rushService';
 import { loadDishes } from './services/dishService';
+import { submitOrderToBackend } from './services/orderService';
 
 export type UserMode = 'normal' | 'child' | null;
 
@@ -44,7 +45,7 @@ export default function App() {
   
   const [userMode, setUserMode] = useState<UserMode>(null);
   const [tableNumber, setTableNumber] = useState<number | null>(
-    deviceType === 'smartphone' && tableParam ? parseInt(tableParam) : null
+    tableParam ? parseInt(tableParam) : null
   );
   const [isRushMode, setIsRushMode] = useState(false);
   const [ordersInProgress, setOrdersInProgress] = useState(0);
@@ -191,21 +192,52 @@ export default function App() {
     setPersonalCarts(prev => prev.map(c => c.playerId === playerId ? { ...c, items: [] } : c));
   };
 
-  const handlePersonalPayment = (playerId: number) => {
+  const handlePersonalPayment = async (playerId: number) => {
+    console.log('🔴🔴🔴 [App.tsx] PERSONAL PAYMENT CLICKED! 🔴🔴🔴', { playerId });
+    
     const cart = personalCarts.find(c => c.playerId === playerId);
     if (!cart || cart.items.length === 0) return;
     
     const totalPrepTime = cart.items.reduce((sum, item) => sum + (item.dish.prepTime * item.quantity), 0);
     addPrepTime(totalPrepTime);
+    
+    // Soumettre la commande au backend
+    if (tableNumber) {
+      const result = await submitOrderToBackend(tableNumber, cart.items, 1);
+      if (result.success) {
+        console.log(`✅ [Player ${playerId}] Commande envoyée au backend:`, result.orderId);
+      } else {
+        console.error(`❌ [Player ${playerId}] Erreur soumission:`, result.error);
+      }
+    }
+    
     setPersonalCarts(prev => prev.map(c => c.playerId === playerId ? { ...c, items: [] } : c));
     setPlayerConfirmations(prev => ({ ...prev, [playerId]: true }));
     setTimeout(() => setPlayerConfirmations(prev => ({ ...prev, [playerId]: false })), 3000);
   };
 
-  const handleSharedPayment = () => {
+  const handleSharedPayment = async () => {
+    console.log('🔴🔴🔴 [App.tsx] SHARED PAYMENT CLICKED! 🔴🔴🔴', { sharedCartLength: sharedCart.length });
+    
     if (sharedCart.length === 0) return;
     const totalPrepTime = sharedCart.reduce((sum, item) => sum + (item.dish.prepTime * item.quantity), 0);
     addPrepTime(totalPrepTime);
+    
+    // Soumettre la commande au backend
+    console.log('🟢 [App.tsx] tableNumber =', tableNumber);
+    if (tableNumber) {
+      console.log('🟢 [App.tsx] Appel submitOrderToBackend...');
+      const result = await submitOrderToBackend(tableNumber, sharedCart, 4);
+      console.log('🟢 [App.tsx] Résultat:', result);
+      if (result.success) {
+        console.log('✅ Commande envoyée au backend:', result.orderId);
+      } else {
+        console.error('❌ Erreur soumission commande:', result.error);
+      }
+    } else {
+      console.error('❌ [App.tsx] tableNumber est undefined/null!');
+    }
+    
     setSharedCart([]);
     setOrderConfirmed(true);
     setTimeout(() => setOrderConfirmed(false), 3000);

@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import type { CartItem } from './CartSidebar';
 import type { Dish } from '../data/dishes';
 import { addPrepTime } from '../data/rushService';
+import { submitOrderToBackend } from '../services/orderService';
 
 // Type pour représenter le panier d'un convive
 interface PersonalCart {
@@ -24,7 +25,7 @@ interface TableTactileProps {
 }
 
 export function TableTactile({ tableNumber, isRushHour }: TableTactileProps) {
-  console.log('TableTactile loaded!', { tableNumber, isRushHour });
+  console.log('🔴🔴🔴 TableTactile loaded WITH BACKEND INTEGRATION! 🔴🔴🔴', { tableNumber, isRushHour });
   
   // État pour les 4 paniers personnels
   const [personalCarts, setPersonalCarts] = useState<PersonalCart[]>([
@@ -164,7 +165,8 @@ export function TableTactile({ tableNumber, isRushHour }: TableTactileProps) {
   };
 
   // Paiement individuel d'un convive
-  const handlePersonalPayment = (playerId: number) => {
+  const handlePersonalPayment = async (playerId: number) => {
+    console.log('🔴🔴🔴 [TableTactile] PERSONAL PAYMENT CLICKED! 🔴🔴🔴', { playerId });
     const personalCart = personalCarts.find(cart => cart.playerId === playerId);
     if (!personalCart || personalCart.items.length === 0) return;
 
@@ -198,6 +200,14 @@ export function TableTactile({ tableNumber, isRushHour }: TableTactileProps) {
       totalPrepTime: totalPrepTime,
     };
 
+    // Soumettre la commande au backend
+    const result = await submitOrderToBackend(tableNumber, personalCart.items, 1);
+    if (result.success) {
+      console.log(`✅ [Joueur ${playerId}] Commande envoyée au backend:`, result.orderId);
+    } else {
+      console.error(`❌ [Joueur ${playerId}] Erreur soumission:`, result.error);
+    }
+
     // Vider le panier personnel
     setPersonalCarts(prevCarts =>
       prevCarts.map(cart =>
@@ -215,7 +225,9 @@ export function TableTactile({ tableNumber, isRushHour }: TableTactileProps) {
   };
 
   // Paiement groupé de la commande commune
-  const handleSharedPayment = () => {
+  const handleSharedPayment = async () => {
+    console.log('🔴🔴🔴 [TableTactile] SHARED PAYMENT CLICKED! 🔴🔴🔴', { sharedCartLength: sharedCart.length });
+    
     if (sharedCart.length === 0) return;
 
     // Calculer le temps de préparation
@@ -246,6 +258,16 @@ export function TableTactile({ tableNumber, isRushHour }: TableTactileProps) {
       totalPrice: totalPrice,
       totalPrepTime: totalPrepTime,
     };
+
+    console.log('[TableTactile] Avant soumission backend, orderData:', orderData);
+
+    // Soumettre la commande au backend
+    const result = await submitOrderToBackend(tableNumber, sharedCart, 4);
+    if (result.success) {
+      console.log('✅ [Commande groupée] Envoyée au backend:', result.orderId);
+    } else {
+      console.error('❌ [Commande groupée] Erreur soumission:', result.error);
+    }
 
     // Vider le panier commun
     setSharedCart([]);
