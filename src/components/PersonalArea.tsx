@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { MenuView } from './MenuView';
 import { OrderConfirmation } from './OrderConfirmation';
-import { ShoppingCart, CreditCard, Plus, X } from 'lucide-react';
+import { ImportCartModal } from './ImportCartModal';
+import { ShoppingCart, CreditCard, Plus, X, Download } from 'lucide-react';
 import { Button } from './ui/button';
 import type { CartItem } from './CartSidebar';
 import type { Dish } from '../data/dishes';
@@ -37,6 +38,7 @@ export function PersonalArea({
   onResetConfirmation,
 }: PersonalAreaProps) {
   const [selectedDish, setSelectedDish] = useState<Dish | null>(null);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const totalItems = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = cart.items.reduce((sum, item) => sum + (item.dish.price * item.quantity), 0);
@@ -57,6 +59,12 @@ export function PersonalArea({
   const handleAddDish = (dish: Dish) => {
     onAddToCart(playerId, dish, 1);
     setSelectedDish(null);
+  };
+
+  const handleImportValidate = (reference: string) => {
+    console.log('Import panier avec référence:', reference);
+    // Fonction mockée - ne fait rien pour le moment
+    setShowImportModal(false);
   };
 
   const playerColors = {
@@ -133,8 +141,17 @@ export function PersonalArea({
         </div>
 
         {/* Panier personnel */}
-        <div className={`w-2/5 border-l-2 ${playerBorderColors[playerId as keyof typeof playerBorderColors]} bg-neutral-50 flex flex-col p-1.5 min-w-0`}>
-          <div className="text-xs font-semibold mb-1.5 flex-shrink-0">Mon Panier</div>
+        <div className={`w-2/5 border-l-2 ${playerBorderColors[playerId as keyof typeof playerBorderColors]} bg-neutral-50 flex flex-col p-1.5 min-w-0 relative`}>
+          <div className="flex items-center justify-between mb-1.5 flex-shrink-0">
+            <div className="text-xs font-semibold">Mon Panier</div>
+            <button 
+              onClick={() => setShowImportModal(true)}
+              className="flex items-center gap-0.5 text-green-600 hover:text-green-700 transition-colors"
+              title="Importer un panier"
+            >
+              <Download className="w-3.5 h-3.5" />
+            </button>
+          </div>
           <div className="flex-1 overflow-y-auto space-y-0.5 min-h-0">
             {cart.items.map(item => (
               <div key={item.dish.id} className="bg-white rounded px-1 py-0.5 text-[10px]">
@@ -161,6 +178,13 @@ export function PersonalArea({
               <CreditCard className="w-2.5 h-2.5 mr-0.5" />Payer
             </Button>
           </div>
+
+          {/* Modal d'import */}
+          <ImportCartModal 
+            open={showImportModal}
+            onClose={() => setShowImportModal(false)}
+            onValidate={handleImportValidate}
+          />
         </div>
       </div>
     </div>
