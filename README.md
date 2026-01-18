@@ -1,3 +1,15 @@
+Accès mode tablette : 
+
+http://localhost:3003/?mode=tablet
+
+Accès mode smartphone : 
+
+http://localhost:3003?mode=phone
+
+Accès mode table tactile : 
+
+http://localhost:3003?idtable=5
+
 # 🍽️ Projet Adaptation des Interfaces - Restaurant
 
 Application de commande pour restaurant avec 3 interfaces adaptées : Table Tactile, Tablette, Smartphone.
