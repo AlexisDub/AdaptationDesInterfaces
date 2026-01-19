@@ -1,0 +1,45 @@
+@startuml Solution 2 - Mode Rush
+title Solution 2 - Mode Rush avec BFF
+
+participant "User" as User
+participant "App" as FE
+participant "BFF\n:4000" as BFF
+database "BFF Database" as DB
+participant "Dining Service\n:3001" as Dining
+
+note over FE: === FRONTEND ===
+note over Dining: === BACKEND ===
+
+== Detection Affluence ==
+
+User -> FE: Ouvre l'application
+
+loop Toutes les 10 secondes
+  FE -> BFF: **GET /bff/rush-status**
+  activate BFF
+  
+  BFF -> Dining: **GET /tableOrders**
+  Dining --> BFF: TableOrder[]
+  
+  BFF -> BFF: count = filter(billed === null).length
+  BFF -> DB: db.restaurant_config.findOne({ rush_threshold })
+  DB --> BFF: { rush_threshold: 10 }
+  
+  alt count > threshold
+    BFF --> FE: { isRushMode: true, activeOrders: count }
+    FE --> User: Banniere + Toggle "Plats rapides"
+  else count <= threshold
+    BFF --> FE: { isRushMode: false }
+    FE --> User: Masque banniere/toggle
+  end
+  deactivate BFF
+end
+
+== Filtrage (si utilisateur active) ==
+
+User -> FE: Active toggle "Plats rapides"
+
+FE -> FE: filter(d => d.isQuick)
+FE --> User: Affiche plats rapides uniquement
+
+@enduml

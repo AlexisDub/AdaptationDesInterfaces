@@ -1,0 +1,59 @@
+@startuml Solution 2 - Mode Enfant
+title Solution 2 - Mode Enfant avec BFF
+
+participant "Enfant" as User
+participant "App" as FE
+participant "BFF\n:4000" as BFF
+database "BFF Database" as DB
+participant "Menu Service\n:3000" as Menu
+
+note over User,FE: === FRONTEND ===
+note over Menu: === BACKEND ===
+
+== Activation ==
+
+User -> FE: Clique "Mode Enfant"
+FE -> BFF: **GET /bff/child-mode-config**
+BFF -> DB: db.child_mode_config.findOne()
+BFF --> FE: Config + Rewards
+FE -> FE: initChildState()
+FE --> User: "Bonjour petit chef !"
+
+== Chargement Plats ==
+
+FE -> BFF: **GET /bff/dishes/kid-friendly**
+activate BFF
+BFF -> Menu: **GET /menus**
+Menu --> BFF: MenuItem[]
+BFF -> DB: db.dish_metadata.find({ kidFriendly: true })
+BFF -> BFF: Merge + filter
+BFF --> FE: EnrichedDish[] enfants
+deactivate BFF
+note right of FE: kidFriendly fiable (valide en BDD)
+FE --> User: Affiche plats enfants
+
+== Recompenses ==
+
+loop Commande entree/plat/dessert
+  User -> FE: Commande plat
+  FE -> FE: Accumule etoiles
+  FE --> User: Message Chef Leo
+  break Apres dessert
+    FE --> User: "Bravo champion !"
+  end
+end
+
+alt Etoiles suffisantes
+  FE -> BFF: **GET /bff/child-rewards**
+  BFF -> DB: db.child_rewards.find()
+  BFF --> FE: Rewards disponibles
+  FE --> User: Affichage menu choix
+  User -> FE: Selectionne recompense
+  FE -> FE: Verifie stars >= required
+  FE --> User: Affiche voucher visuel
+  note left of User: "Montre au serveur !"
+else Pas assez
+  FE --> User: "Bon appetit !"
+end
+
+@enduml

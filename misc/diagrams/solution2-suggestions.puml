@@ -1,0 +1,30 @@
+@startuml Solution 2 - Suggestions
+title Solution 2 - Suggestions Intelligentes avec BFF
+
+participant "User" as User
+participant "App" as FE
+participant "BFF\n:4000" as BFF
+database "BFF Database" as DB
+
+note over User,FE: === FRONTEND ===
+note over BFF,DB: === BACKEND ===
+
+== Detection Hesitation ==
+
+User -> FE: Survole une carte de plat
+
+loop Apres 7 secondes
+  FE -> BFF: **POST /bff/suggestions**
+  activate BFF
+  
+  BFF -> DB: db.dish_associations.find()
+  BFF -> DB: db.order_statistics.find()
+  note right of BFF: Calcul score avec associations + tendances + popularite
+  
+  BFF --> FE: EnrichedDish[] suggestions
+  deactivate BFF
+  
+  FE --> User: Affiche panel suggestions
+end
+
+@enduml

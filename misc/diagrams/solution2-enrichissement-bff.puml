@@ -1,0 +1,76 @@
+@startuml Solution 2 - Enrichissement BFF
+title Solution 2 - Enrichissement via BFF
+
+participant "User" as User
+participant "App" as FE
+participant "BFF\n:4000" as BFF
+database "BFF Database" as DB
+participant "Menu Service\n:3000" as Menu
+participant "Dining Service\n:3001" as Dining
+
+note over FE: === FRONTEND ===
+note over Menu,Dining: === BACKEND ===
+
+== Chargement Initial ==
+
+FE -> BFF: **GET /bff/dishes**
+activate BFF
+
+BFF -> Menu: **GET /menus**
+activate Menu
+Menu --> BFF: MenuItem[] (6 champs)
+deactivate Menu
+
+BFF -> DB: db.dish_metadata.find()
+activate DB
+DB --> BFF: DishMetadata[]
+deactivate DB
+
+loop Pour chaque MenuItem
+  BFF -> BFF: merger = MenuItem + DishMetadata
+  BFF -> BFF: Calculs dérivés ( e.g. isQuick = prepTime <= 15)
+  
+end
+
+BFF --> FE: EnrichedDish[] (20+ champs)
+deactivate BFF
+
+FE -> FE: Cache dishes localement
+
+== Filtrage Frontend (pas de requete BFF) ==
+
+group Exemple Filtres Avances
+  FE -> FE: filter(d => d.isVegetarian && !d.allergens.includes("gluten"))
+  FE -> FE: Affiche resultats filtres
+end
+
+== Validation Commande (General) ==
+
+User -> FE: Valide panier
+FE -> BFF: **POST /bff/tableOrders**
+note right of FE: Envoie items + tableNumber
+activate BFF
+
+BFF -> Dining: **GET /tableOrders**
+Dining --> BFF: TableOrder[]
+BFF -> BFF: filter(tableNumber && billed === null)
+
+alt Commande existe
+  BFF -> BFF: Reassocie menuItemId si besoin
+  BFF -> Dining: **POST /tableOrders/{tableOrderId}**
+  note right of BFF: Ajoute items a la commande existante
+  Dining --> BFF: TableOrder mis a jour
+else Pas de commande
+  BFF -> Dining: **POST /tableOrders**
+  note right of BFF: Cree commande (tableNumber, customersCount)
+  Dining --> BFF: TableOrder cree
+  BFF -> Dining: **POST /tableOrders/{tableOrderId}**
+  note right of BFF: Ajoute items
+  Dining --> BFF: TableOrder avec items
+end
+
+BFF --> FE: Confirmation
+deactivate BFF
+FE --> User: Confirmation commande
+
+@enduml
