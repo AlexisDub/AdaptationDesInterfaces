@@ -32,7 +32,6 @@ STRUCTURE:
   "isQuick": boolean,              // Plat rapide (< 15 min) ?
   "imageUrl": string,              // URL de l'image du plat
   "kidFriendly": boolean,          // Adapté aux enfants ?
-  "hasVegetables": boolean,        // Contient des légumes ?
   "ingredients": string[],         // Liste d'ingrédients pour recherche
   "isVegetarian": boolean,         // Option végétarienne ?
   "isVegan": boolean,              // Option végane ?

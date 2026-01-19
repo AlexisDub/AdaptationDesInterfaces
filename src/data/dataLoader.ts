@@ -207,7 +207,6 @@ export function rewardToDish(reward: ChildReward): Dish {
     isQuick: true,
     imageUrl: reward.imageUrl || `https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=400`,
     kidFriendly: true,
-    hasVegetables: false,
     prepTime: 0,
     ingredients: ['Cadeau', 'Récompense'],
     isVegetarian: true,

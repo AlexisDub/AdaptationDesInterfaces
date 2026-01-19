@@ -10,6 +10,10 @@ Accès mode table tactile :
 
 http://localhost:3003?idtable=5
 
+TODO : 
+Ajouter filtre boissons
+timing en secondes mais hardcodé en minutes dans meanCookingTimeInSec (backend)
+
 # 🍽️ Projet Adaptation des Interfaces - Restaurant
 
 Application de commande pour restaurant avec 3 interfaces adaptées : Table Tactile, Tablette, Smartphone.

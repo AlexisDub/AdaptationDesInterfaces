@@ -12,7 +12,6 @@ export interface Dish {
   imageUrl: string;
   kidFriendly: boolean;
   kidFriendlyDescription?: string; // Description simplifiée pour les enfants
-  hasVegetables: boolean;
   ingredients: string[]; // List of ingredients for search/filter
   // New filter properties
   isVegetarian?: boolean;

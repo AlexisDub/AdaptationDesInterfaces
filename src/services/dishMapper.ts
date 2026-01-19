@@ -54,9 +54,6 @@ export const mapBackendItemToDish = (
     isSpecialOfDay: false,
     isQuick: (prepTime || 15) <= 15,
     kidFriendly: false,
-    hasVegetables: enrichment.ingredients.some(ing => 
-      /légume|salade|tomate|carotte|courgette|brocoli/i.test(ing)
-    ),
     spicyLevel: enrichment.isSpicy ? 2 : 0,
     // Détection automatique des propriétés diététiques
     isVegetarian: !enrichment.ingredients.some(ing => 
