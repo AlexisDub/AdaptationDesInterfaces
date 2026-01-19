@@ -1,0 +1,43 @@
+@startuml Solution 1 - Suggestions
+title Solution 1 - Suggestions Intelligentes
+
+participant "Utilisateur" as User
+participant "App" as FE
+participant "SuggestionService" as SS
+participant "Dining Service\n:3001" as Dining
+
+note over User,SS: === FRONTEND ===
+note over Dining: === BACKEND ===
+
+== Détection Hésitation ==
+
+User -> FE: Survole une carte de plat
+activate FE
+
+FE -> FE: startHoverTimer()
+
+loop Après 7 secondes
+  FE -> SS: generateSuggestions(currentDishId, enrichedDishes)
+  activate SS
+
+  == Analyse des Tendances ==
+  
+  SS -> Dining: **GET /tableOrders**
+  activate Dining
+  Dining --> SS: TableOrder[]
+  deactivate Dining
+  
+  SS -> SS: Analyser fréquence des plats commandés
+  
+  == Calcul des Suggestions ==
+  
+  SS -> SS: Calculer scores de suggestion (fréquence, plat du jour, local)
+    SS --> FE: Dish[] suggestions
+  deactivate SS
+  
+  FE --> User: Affiche panel suggestions
+end
+
+deactivate FE
+
+@enduml

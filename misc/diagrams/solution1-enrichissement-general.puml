@@ -1,0 +1,107 @@
+@startuml Solution 1 - Enrichissement Général des MenuItem
+title Solution 1 - Enrichissement Général par DishAdapter
+
+participant "App" as FE
+participant "DishAdapter" as DA
+participant "restaurant-data.ts" as Data
+participant "Menu Service\n:3000" as Menu
+
+note over FE,Data: === FRONTEND ===
+note over Menu: === BACKEND ===
+
+== Chargement Initial ==
+
+FE -> Menu: **GET /menus**
+activate Menu
+Menu --> FE: MenuItem[] (6 champs)
+deactivate Menu
+
+note right of FE
+  MenuItem basique du backend:
+  {
+    "_id": "673abc111",
+    "fullName": "Nuggets de poulet",
+    "shortName": "Nuggets",
+    "price": 8.50,
+    "category": "MAIN",
+    "image": "https://..."
+  }
+end note
+
+== Enrichissement ==
+
+FE -> DA: enrichMenuItems(menuItems)
+activate DA
+
+DA -> Data: loadEnrichmentData()
+activate Data
+Data --> DA: EnrichmentMap
+deactivate Data
+
+note left of Data
+  Données d'enrichissement:
+  {
+    "673abc111": {
+      prepTime: 12,
+      ingredients: ["poulet", "frites", "huile"],
+      kidFriendly: true,
+      popularity: 5,
+      isSpecialOfDay: false,
+      isVegetarian: false,
+      isVegan: false,
+      isGlutenFree: false,
+      allergens: ["gluten"],
+      cuisine: "française",
+      spicyLevel: 0,
+      isLight: false,
+      hasVegetables: false,
+      ...
+    }
+  }
+end note
+
+loop Pour chaque MenuItem
+  DA -> DA: merger = { ...menuItem, ...enrichmentData }
+  
+  DA -> DA: Calculs dérivés
+  note right
+    - isQuick = prepTime <= 15
+    - category mapping: MAIN -> "plat"
+    - subcategory depuis enrichmentData
+  end note
+end
+
+DA --> FE: Dish[] enrichis (20+ champs)
+deactivate DA
+
+note right of FE
+  Dish enrichi final:
+  {
+    "_id": "673abc111",
+    "fullName": "Nuggets de poulet",
+    "shortName": "Nuggets",
+    "price": 8.50,
+    "category": "plat",
+    "subcategory": "viande",
+    "image": "https://...",
+    "prepTime": 12,
+    "isQuick": true,
+    "ingredients": ["poulet", "frites"],
+    "kidFriendly": true,
+    "popularity": 5,
+    "isSpecialOfDay": false,
+    "isVegetarian": false,
+    "isVegan": false,
+    "isGlutenFree": false,
+    "allergens": ["gluten"],
+    ...
+  }
+end note
+
+== Utilisation pour les Filtres ==
+
+group Filtres Avancés
+  FE -> FE: filter par:\n- ingredients[]\n- isVegetarian\n- isVegan\n- isGlutenFree\n- allergens[]\n- cuisine\n- spicyLevel
+end
+
+@enduml

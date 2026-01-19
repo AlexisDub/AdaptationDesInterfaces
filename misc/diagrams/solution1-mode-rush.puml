@@ -1,0 +1,58 @@
+@startuml Solution 1 - Mode Rush
+title Solution 1 - Mode Rush (Adaptation Frontend)
+
+participant "Utilisateur" as User
+participant "App" as FE
+participant "RushService" as RS
+participant "DishAdapter" as DA
+participant "Dining Service\n:3001" as Dining
+
+note over FE,DA: === FRONTEND ===
+note over Dining: === BACKEND ===
+
+== Détection Affluence ==
+
+User -> FE: Ouvre l'application
+activate FE
+
+loop Toutes les 10 secondes
+  FE -> RS: checkRushStatus()
+  activate RS
+  
+  RS -> Dining: **GET /tableOrders**
+  activate Dining
+  Dining --> RS: TableOrder[]
+  deactivate Dining
+
+  RS -> RS: count = filter(billed === null).length
+  note right: Seuil: count > 10
+  
+  alt count > 10
+    RS --> FE: { isRushMode: true }
+    FE --> User: Bannière + Toggle "Plats rapides"
+  else count ≤ 10
+    RS --> FE: { isRushMode: false }
+    FE --> User: Masque bannière/toggle
+  end
+  deactivate RS
+end
+
+== Filtrage (si utilisateur active) ==
+
+User -> FE: Active toggle "Plats rapides"
+
+FE -> DA: enrichAndFilter(menuItems)
+activate DA
+
+loop Pour chaque MenuItem enrichi
+  DA -> DA: isQuick = (prepTime <= 15)
+end
+
+DA -> DA: filter(isQuick === true)
+DA --> FE: Dish[] filtrés
+deactivate DA
+
+FE --> User: Affiche plats rapides uniquement
+deactivate FE
+
+@enduml
