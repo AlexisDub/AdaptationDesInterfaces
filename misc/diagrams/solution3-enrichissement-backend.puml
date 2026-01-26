@@ -1,0 +1,65 @@
+@startuml Solution 3 - Enrichissement Backend
+title Solution 3 - Enrichissement Général par Backend Modifié
+
+participant "User" as User
+participant "App" as FE
+participant "Menu Service\n:3000" as Menu
+participant "Dining Service\n:3001" as Dining
+
+note over FE: === FRONTEND ===
+note over Menu,Dining: === BACKEND ===
+
+== Chargement Initial ==
+
+FE -> Menu: **GET /menus**
+activate Menu
+
+note right of Menu: Données complètes :\n- kidFriendly\n- prepTime\n- isVegetarian\n- ingredients[]\n- isQuick\n- cuisine\n- popularity\n- etc.
+
+Menu --> FE: MenuItem[] (20+ champs)
+deactivate Menu
+
+== Utilisation pour les Filtres ==
+
+group Filtres Avancés (Natifs du Backend)
+  FE -> FE: filter par:\n- ingredients[]\n- isVegetarian\n- isVegan\n- isGlutenFree\n- allergens[]\n- cuisine\n- spicyLevel\n- isQuick\n- prepTime
+  note right of FE: Tous les champs disponibles\nEnrichis par le backend
+end
+
+== Mode Spécial: Rush Detection ==
+
+loop Toutes les 10 secondes
+  FE -> Menu: **GET /rush-status**
+  activate Menu
+  
+  Menu -> Dining: **GET /tableOrders**
+  Dining --> Menu: TableOrder[]
+  
+  Menu -> Menu: count = filter(billed === null).length
+  note right of Menu: Seuil configurable
+  
+  Menu --> FE: { isRushMode: bool }
+  deactivate Menu
+end
+
+== Validation Commande ==
+
+User -> FE: Valide panier
+FE -> Dining: **GET /tableOrders**
+note right of FE: Cherche commande active
+Dining --> FE: TableOrder[]
+FE -> FE: filter(tableNumber === current && billed === null)
+
+alt Commande existe
+  FE -> Dining: **POST /tableOrders/{tableOrderId}**
+  Dining --> FE: TableOrder mis à jour
+else Pas de commande
+  FE -> Dining: **POST /tableOrders**
+  Dining --> FE: TableOrder créé
+  FE -> Dining: **POST /tableOrders/{tableOrderId}**
+  Dining --> FE: TableOrder avec items
+end
+
+FE --> User: Confirmation commande
+
+@enduml

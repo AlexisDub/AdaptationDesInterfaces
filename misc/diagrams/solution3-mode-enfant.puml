@@ -1,0 +1,70 @@
+@startuml Solution 3 - Mode Enfant
+title Solution 3 - Mode Enfant (Chef Léo) avec Backend Modifié
+
+participant "Enfant" as User
+participant "App" as FE
+participant "Child Mode Service\n:3002" as ChildService
+participant "Menu Service\n:3000" as Menu
+
+note over User,FE: === FRONTEND ===
+note over ChildService,Menu: === BACKEND ===
+
+== Activation ==
+
+User -> FE: Clique "Mode Enfant"
+FE -> ChildService: **GET /child-mode-config**
+activate ChildService
+
+ChildService --> FE: Config (messages Chef Léo, branding)
+deactivate ChildService
+
+FE -> FE: initChildState()
+FE --> User: "Bonjour petit chef !"
+
+== Chargement Plats Enfants ==
+
+FE -> ChildService: **GET /menus?kidFriendly=true**
+activate ChildService
+
+ChildService -> Menu: **GET /menus**
+activate Menu
+Menu --> ChildService: MenuItem[]
+deactivate Menu
+
+note right of ChildService: Filtre :\n- Sélection kidFriendly=true\n- Adaptation présentation\n- Données fiables du Menu Service
+ChildService --> FE: MenuItem[] enfants (kidFriendly=true)
+deactivate ChildService
+
+FE --> User: Affiche plats enfants (Chef Léo design)
+
+== Récompenses ==
+
+loop Commande entrée/plat/dessert
+  User -> FE: Commande plat
+  FE -> FE: Accumule étoiles
+  FE --> User: Message Chef Léo
+  break Après dessert
+    FE --> User: "Bravo champion !"
+  end
+end
+
+alt Étoiles suffisantes
+  FE -> ChildService: **GET /child-rewards**
+  activate ChildService
+  
+  note right of ChildService: Récompenses gérées en backend :\n- Modifiables sans redeploy\n- Admin CRUD complet
+  
+  ChildService --> FE: Reward[] (nom, emoji, stars)
+  deactivate ChildService
+  
+  FE --> User: Affiche menu des récompenses
+  User -> FE: Sélectionne récompense(s)
+  FE -> FE: Vérifie stars >= required
+  FE --> User: Affiche voucher visuel
+  note left of User: "Montre au serveur !"
+  
+else Pas assez d'étoiles
+  FE --> User: "Bon appétit !"
+end
+
+@enduml

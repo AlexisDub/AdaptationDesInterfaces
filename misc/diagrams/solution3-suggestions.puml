@@ -1,0 +1,40 @@
+@startuml Solution 3 - Suggestions
+title Solution 3 - Suggestions Intelligentes avec Backend Modifié
+
+participant "Utilisateur" as User
+participant "App" as FE
+participant "Menu Service\n:3000" as Menu
+participant "Dining Service\n:3001" as Dining
+
+note over User,FE: === FRONTEND ===
+note over Menu,Dining: === BACKEND ===
+
+== Détection Hésitation ==
+
+User -> FE: Survole une carte de plat
+activate FE
+
+FE -> FE: startHoverTimer()
+
+loop Après 7 secondes
+  FE -> Menu: **POST /recommendations**
+  note right of FE: Envoie: currentDishId, userContext\n(mode, isRushMode, currentCart)
+  
+  activate Menu
+  
+  == Analyse Données Backend ==
+  
+  note right of Menu: Calcul score avec associations + tendances + popularite
+  
+  Menu -> Menu: Calcul score
+  
+  Menu --> FE: MenuItem[] suggestions
+  deactivate Menu
+  
+  FE --> User: Affiche panel suggestions\navec plats recommandés
+end
+
+deactivate FE
+
+
+@enduml
