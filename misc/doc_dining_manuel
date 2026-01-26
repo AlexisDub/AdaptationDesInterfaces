@@ -1,0 +1,623 @@
+Micro-Service Restaurant: Dining Service
+
+OAS 3.0
+
+Dining Service Open API definition
+Servers
+health
+GET
+/health
+Parameters
+
+No parameters
+Responses
+Code	Description	Links
+200	
+
+The Health Check is successful
+Media type
+Controls Accept header.
+
+{
+  "status": "ok",
+  "info": {
+    "database": {
+      "status": "up"
+    }
+  },
+  "error": {},
+  "details": {
+    "database": {
+      "status": "up"
+    }
+  }
+}
+
+	No links
+503	
+
+The Health Check is not successful
+Media type
+
+{
+  "status": "error",
+  "info": {
+    "database": {
+      "status": "up"
+    }
+  },
+  "error": {
+    "redis": {
+      "status": "down",
+      "message": "Could not connect"
+    }
+  },
+  "details": {
+    "database": {
+      "status": "up"
+    },
+    "redis": {
+      "status": "down",
+      "message": "Could not connect"
+    }
+  }
+}
+
+	No links
+tables
+GET
+/tables
+Parameters
+
+No parameters
+Responses
+Code	Description	Links
+200	
+Media type
+Controls Accept header.
+
+[
+  {
+    "_id": "string",
+    "number": 1,
+    "taken": true,
+    "tableOrderId": "string"
+  }
+]
+
+	No links
+POST
+/tables
+Parameters
+
+No parameters
+Request body
+
+{
+  "number": 1
+}
+
+Responses
+Code	Description	Links
+201	
+
+The table has been successfully added.
+Media type
+Controls Accept header.
+
+{
+  "_id": "string",
+  "number": 1,
+  "taken": true,
+  "tableOrderId": "string"
+}
+
+	No links
+409	
+
+Table already exists
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+GET
+/tables/{tableNumber}
+Parameters
+Name	Description
+tableNumber *
+number
+(path)
+	
+Responses
+Code	Description	Links
+200	
+Media type
+Controls Accept header.
+
+{
+  "_id": "string",
+  "number": 1,
+  "taken": true,
+  "tableOrderId": "string"
+}
+
+	No links
+404	
+
+Table not found
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+tableOrders
+GET
+/tableOrders
+Parameters
+
+No parameters
+Responses
+Code	Description	Links
+200	
+Media type
+Controls Accept header.
+
+[
+  {
+    "_id": "string",
+    "tableNumber": 0,
+    "customersCount": 0,
+    "opened": "2026-01-12T15:35:05.628Z",
+    "lines": [
+      {
+        "item": {
+          "_id": "string",
+          "shortName": "string"
+        },
+        "howMany": 0,
+        "sentForPreparation": true
+      }
+    ],
+    "preparations": [
+      {
+        "_id": "string",
+        "shouldBeReadyAt": "string",
+        "preparedItems": [
+          {
+            "_id": "string",
+            "shortName": "string"
+          }
+        ]
+      }
+    ],
+    "billed": "2026-01-12T15:35:05.628Z"
+  }
+]
+
+	No links
+POST
+/tableOrders
+Parameters
+
+No parameters
+Request body
+
+{
+  "tableNumber": 1,
+  "customersCount": 1
+}
+
+Responses
+Code	Description	Links
+201	
+
+The table has been successfully opened.
+Media type
+Controls Accept header.
+
+{
+  "_id": "string",
+  "tableNumber": 0,
+  "customersCount": 0,
+  "opened": "2026-01-12T15:35:05.631Z",
+  "lines": [
+    {
+      "item": {
+        "_id": "string",
+        "shortName": "string"
+      },
+      "howMany": 0,
+      "sentForPreparation": true
+    }
+  ],
+  "preparations": [
+    {
+      "_id": "string",
+      "shouldBeReadyAt": "string",
+      "preparedItems": [
+        {
+          "_id": "string",
+          "shortName": "string"
+        }
+      ]
+    }
+  ],
+  "billed": "2026-01-12T15:35:05.631Z"
+}
+
+	No links
+404	
+
+Table not found
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+422	
+
+Table is already taken
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+GET
+/tableOrders/{tableOrderId}
+Parameters
+Name	Description
+tableOrderId *
+string
+(path)
+	
+Responses
+Code	Description	Links
+200	
+Media type
+Controls Accept header.
+
+{
+  "_id": "string",
+  "tableNumber": 0,
+  "customersCount": 0,
+  "opened": "2026-01-12T15:35:05.633Z",
+  "lines": [
+    {
+      "item": {
+        "_id": "string",
+        "shortName": "string"
+      },
+      "howMany": 0,
+      "sentForPreparation": true
+    }
+  ],
+  "preparations": [
+    {
+      "_id": "string",
+      "shouldBeReadyAt": "string",
+      "preparedItems": [
+        {
+          "_id": "string",
+          "shortName": "string"
+        }
+      ]
+    }
+  ],
+  "billed": "2026-01-12T15:35:05.634Z"
+}
+
+	No links
+404	
+
+Table order not found
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+POST
+/tableOrders/{tableOrderId}
+Parameters
+Name	Description
+tableOrderId *
+string
+(path)
+	
+Request body
+
+{
+  "menuItemId": "string",
+  "menuItemShortName": "string",
+  "howMany": 1
+}
+
+Responses
+Code	Description	Links
+201	
+
+The menu item has been successfully added to the table order.
+Media type
+Controls Accept header.
+
+{
+  "_id": "string",
+  "tableNumber": 0,
+  "customersCount": 0,
+  "opened": "2026-01-12T15:35:05.636Z",
+  "lines": [
+    {
+      "item": {
+        "_id": "string",
+        "shortName": "string"
+      },
+      "howMany": 0,
+      "sentForPreparation": true
+    }
+  ],
+  "preparations": [
+    {
+      "_id": "string",
+      "shouldBeReadyAt": "string",
+      "preparedItems": [
+        {
+          "_id": "string",
+          "shortName": "string"
+        }
+      ]
+    }
+  ],
+  "billed": "2026-01-12T15:35:05.636Z"
+}
+
+	No links
+404	
+
+Table order not found
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+422	
+
+TableOrder is already billed
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+POST
+/tableOrders/{tableOrderId}/prepare
+Parameters
+Name	Description
+tableOrderId *
+string
+(path)
+	
+Responses
+Code	Description	Links
+201	
+
+The menu items have been successfully sent for preparation.
+Media type
+Controls Accept header.
+
+[
+  {
+    "_id": "string",
+    "shouldBeReadyAt": "string",
+    "preparedItems": [
+      {
+        "_id": "string",
+        "shortName": "string"
+      }
+    ]
+  }
+]
+
+	No links
+404	
+
+Table order not found
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+422	
+
+TableOrder is already billed
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+POST
+/tableOrders/{tableOrderId}/bill
+Parameters
+Name	Description
+tableOrderId *
+string
+(path)
+	
+Responses
+Code	Description	Links
+200	
+
+The table has been successfully billed.
+Media type
+Controls Accept header.
+
+{
+  "_id": "string",
+  "tableNumber": 0,
+  "customersCount": 0,
+  "opened": "2026-01-12T15:35:05.639Z",
+  "lines": [
+    {
+      "item": {
+        "_id": "string",
+        "shortName": "string"
+      },
+      "howMany": 0,
+      "sentForPreparation": true
+    }
+  ],
+  "preparations": [
+    {
+      "_id": "string",
+      "shouldBeReadyAt": "string",
+      "preparedItems": [
+        {
+          "_id": "string",
+          "shortName": "string"
+        }
+      ]
+    }
+  ],
+  "billed": "2026-01-12T15:35:05.639Z"
+}
+
+	No links
+404	
+
+Table order not found
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+422	
+
+TableOrder is already billed
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+Schemas
+TableWithOrderDto{
+_id*	string
+number*	number
+minimum: 1
+taken*	boolean
+tableOrderId*	string
+}
+TableNumberNotFoundException{
+error*	string
+details*	string
+}
+AddTableDto{
+number*	number
+minimum: 1
+}
+TableAlreadyExistsException{
+error*	string
+details*	string
+}
+OrderingItem{
+_id*	string
+shortName*	string
+}
+OrderingLine{
+item*	OrderingItem{
+_id*	string
+shortName*	string
+}
+howMany*	number
+sentForPreparation*	boolean
+}
+PreparedItemDto{
+_id*	string
+shortName*	string
+}
+PreparationDto{
+_id*	string
+shouldBeReadyAt*	string
+preparedItems*	[
+minItems: 1
+PreparedItemDto{
+_id*	string
+shortName*	string
+}]
+}
+TableOrder{
+_id*	string
+tableNumber*	number
+customersCount*	number
+opened*	string($date-time)
+lines*	[OrderingLine{
+item*	OrderingItem{
+_id*	string
+shortName*	string
+}
+howMany*	number
+sentForPreparation*	boolean
+}]
+preparations*	[PreparationDto{
+_id*	string
+shouldBeReadyAt*	string
+preparedItems*	[
+minItems: 1
+PreparedItemDto{...}]
+}]
+billed*	string($date-time)
+}
+StartOrderingDto{
+tableNumber*	number
+minimum: 1
+customersCount*	number
+minimum: 1
+}
+TableAlreadyTakenException{
+error*	string
+details*	string
+}
+TableOrderIdNotFoundException{
+error*	string
+details*	string
+}
+AddMenuItemDto{
+menuItemId*	string
+menuItemShortName*	string
+howMany*	number
+minimum: 1
+}
+TableOrderAlreadyBilledException{
+error*	string
+details*	string
+}

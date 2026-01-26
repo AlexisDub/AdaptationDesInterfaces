@@ -1,0 +1,196 @@
+Micro-Service Restaurant: Menu Service
+
+OAS 3.0
+
+Menu Service Open API definition
+Servers
+health
+GET
+/health
+Parameters
+
+No parameters
+Responses
+Code	Description	Links
+200	
+
+The Health Check is successful
+Media type
+Controls Accept header.
+
+{
+  "status": "ok",
+  "info": {
+    "database": {
+      "status": "up"
+    }
+  },
+  "error": {},
+  "details": {
+    "database": {
+      "status": "up"
+    }
+  }
+}
+
+	No links
+503	
+
+The Health Check is not successful
+Media type
+
+{
+  "status": "error",
+  "info": {
+    "database": {
+      "status": "up"
+    }
+  },
+  "error": {
+    "redis": {
+      "status": "down",
+      "message": "Could not connect"
+    }
+  },
+  "details": {
+    "database": {
+      "status": "up"
+    },
+    "redis": {
+      "status": "down",
+      "message": "Could not connect"
+    }
+  }
+}
+
+	No links
+menus
+GET
+/menus
+Parameters
+
+No parameters
+Responses
+Code	Description	Links
+200	
+Media type
+Controls Accept header.
+
+[
+  {
+    "_id": "string",
+    "fullName": "string",
+    "shortName": "string",
+    "price": 0,
+    "category": "STARTER",
+    "image": "string"
+  }
+]
+
+	No links
+POST
+/menus
+Parameters
+
+No parameters
+Request body
+
+{
+  "fullName": "string",
+  "shortName": "string",
+  "price": 1,
+  "category": "STARTER",
+  "image": "string"
+}
+
+Responses
+Code	Description	Links
+201	
+
+The menu item has been successfully added.
+Media type
+Controls Accept header.
+
+{
+  "_id": "string",
+  "fullName": "string",
+  "shortName": "string",
+  "price": 0,
+  "category": "STARTER",
+  "image": "string"
+}
+
+	No links
+409	
+
+Menu short name already exists
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+GET
+/menus/{menuItemId}
+Parameters
+Name	Description
+menuItemId *
+string
+(path)
+	
+Responses
+Code	Description	Links
+200	
+Media type
+Controls Accept header.
+
+{
+  "_id": "string",
+  "fullName": "string",
+  "shortName": "string",
+  "price": 0,
+  "category": "STARTER",
+  "image": "string"
+}
+
+	No links
+404	
+
+MenuItem not found
+Media type
+
+{
+  "error": "string",
+  "details": "string"
+}
+
+	No links
+Schemas
+MenuItem{
+_id*	string
+fullName*	string
+shortName*	string
+price*	number
+category*	stringEnum:
+[ STARTER, MAIN, DESSERT, BEVERAGE ]
+image*	string
+}
+MenuItemIdNotFoundException{
+error*	string
+details*	string
+}
+AddMenuItemDto{
+fullName*	string
+shortName*	string
+price*	number
+minimum: 1
+category*	stringEnum:
+[ STARTER, MAIN, DESSERT, BEVERAGE ]
+image*	string($uri)
+}
+MenuItemShortNameAlreadyExistsException{
+error*	string
+details*	string
+}
